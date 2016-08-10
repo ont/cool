@@ -1,0 +1,15 @@
+[linter]
+files = **/*.py
+ignore = venv/**/*.*, tests/**/*.*
+bears = PyLintBear
+
+#[pep8]
+#files = **/*.py
+#ignore = venv/**/*.*
+#bears = PEP8Bear
+
+[Spacing]
+files = **/*.py
+ignore = venv/**/*.*
+bears = SpaceConsistencyBear
+use_spaces = True
