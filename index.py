@@ -25,9 +25,15 @@
 #
 
 # TODO: better naming / design for supporting different types of indexes?
-class Index:
-    def __init__(self, tree):
-        self.tree = tree
 
-    def save(self, key, rec_id):
-        pass
+import tubes
+
+
+# TODO: split it to "index" module  index/__init__.py  index/words.py ...
+class IndexWords(IndexFile)
+
+    def start_index(self):
+        self.dict = {}
+        self.id = 0     ## id of record
+
+    def save_to_index()

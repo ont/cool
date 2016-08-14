@@ -66,39 +66,38 @@ class TestBox:
 
 
     def test_savs_and_paks_after_crash(self, tmpdir):
-        b = Box('test-box', base=str(tmpdir))  ## restarting box, emulating crash...
+        b = Box('test-box', base=str(tmpdir))  ## HH.sav
         b.save([1,2,3,4,5])
 
-        b = Box('test-box', base=str(tmpdir))  ## restarting box, emulating crash...
+        b = Box('test-box', base=str(tmpdir))  ## HH.sav.0001 (restarting box, emulating crash)
         b.save([1,2,3,4,5])
 
-        b = Box('test-box', base=str(tmpdir))  ## restarting box, emulating crash...
+        b = Box('test-box', base=str(tmpdir))  ## HH.sav.0002
         b.save([1,2,3,4,5])
 
-        b = Box('test-box', base=str(tmpdir))  ## restarting box, emulating crash...
+        b = Box('test-box', base=str(tmpdir))  ## HH.sav.0003
         b.save([1,2,3,4,5])
-        b.close()                              ## .. and normaly close it
+        b.close()                              ## .. and normaly close it (HH.sav.0003 will be deleted)
 
-        savs = list(tmpdir.visit('*.sav'))
-        assert len(savs) == 3, "total amount of .sav files should be 3 (*.sav, *_0001.sav and *_0002.sav)"
+        savs = list(tmpdir.visit('*.sav*'))
+        assert len(savs) == 3, "total amount of .sav files should be 3 (*.sav, *.sav.0001 and *.sav.0002)"
 
-        savs = list(tmpdir.visit('*_000?.sav'))
-        assert len(savs) == 2, "two incremental .sav files should be existed (*_0001.sav and *_0002.sav)"
+        savs = list(tmpdir.visit('*.sav.000?'))
+        assert len(savs) == 2, "two incremental .sav files should be existed (*.sav.0001 and *.sav.0002)"
 
         savs = list(tmpdir.visit('*_0003.sav'))
         assert len(savs) == 0, "no *_0003.sav should be existed (normal finish)"
 
-        paks = list(tmpdir.visit('*.pak'))
+        contents = [ x.open('rb').read() for x in tmpdir.visit('*.sav') ]  ## content of each .sav
+        assert len(set(contents)) == 1, "all .sav files should be identical"
+
+        paks = list(tmpdir.visit('*.pak*'))
         assert len(paks) == 4, "four paks should be found (three broken and one normal)"
 
         contents = [ x.open('rb').read() for x in paks ]  ## content of each .pak
         assert len(set(contents)) == 2, "three broken (equal) and one normal .pak"
 
-        data = next(tmpdir.visit('*_0002.pak')).read('rb')
+        data = next(tmpdir.visit('*.pak.0003')).read('rb')
         data = zlib.decompress(data)
         data = msgpack.unpackb(data)
         assert data == [1,2,3,4,5], "restored data from normal .pak should be [1,2,3,4,5]"
-
-        contents = [ x.open('rb').read() for x in tmpdir.visit('*.sav') ]  ## content of each .sav
-        assert len(set(contents)) == 1, "all .sav files should be identical"
-

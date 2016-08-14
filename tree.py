@@ -1,8 +1,6 @@
 import os
 import datetime
 
-import liquid
-
 #
 # TODO:
 # better DSL:
@@ -25,22 +23,30 @@ import liquid
 # DateTree('./paks').hour.unique().suffix('.sav')
 # DateTree('./paks').hour.suffix('.sav', unique=True) <<<
 #
+# TODO: DateTree as immutable object (fixed timestamp)
+# TODO: removing lazy replacing with freezed strftime self._path
+#
+# TODO: replace self.liquid(self) --> self.liquid(self, Proto)
+#
 
+class DateSynced:
+    """ Use this object in transactions where all DateTree objects must by synced in time.
 
-def lazy_tree(func):
-    """ Special decorator for wrapping DateTree method.
-        It stores method call history into DateTree._lazy storage
-        for later replaying it with DateTree.fresh() method.
+            with DateSynced():
+                dt1 = dt1.fresh()
+                sleep(1)
+                dt2 = dt2.fresh()
+                assert dt1.stamp == dt2.stamp, 'should fresh and equal'
     """
-    def wrapper(*args, **kargs):
-        tree = args[0]
-        tree_new = func(*args, **kargs)
+    synced = False
+    stamp = None
 
-        # append lazy call to stack of calls; args[1:] removes "self" from args list
-        tree_new._lazy = tree._lazy + [ (func.__name__, args[1:], kargs) ]
-        return tree_new
+    def __enter__(self):
+        DateSynced.synced = True
 
-    return wrapper
+    def __exit__(self, *args):
+        DateSynced.synced = False
+        DateSynced.stamp = None
 
 
 class DateTree:
@@ -48,118 +54,84 @@ class DateTree:
         turning them into "liquid files".
     """
 
-    def __init__(self, path):
-        self._lazy = [('base', path)]
-        self.path = os.path.abspath(path)
+    def __init__(self, path, stamp=None):
+        self.stamp = stamp
+        if not self.stamp:
+            self.stamp = datetime.datetime.now()
+
+        self._path = os.path.abspath(path)
 
     def __str__(self):
-        return self.path
+        return self.stamp.strftime(self._path)
 
     def __eq__(self, other):
         return self.path == other.path
 
-
     def fresh(self):
-        """ Returns fresh variant of DateTree with all its components
-            replaced by fresh (current) datetime.
+        """ Returns fresh variant of DateTree for now datetime.
         """
-        lazy = list(self._lazy)          ## make copy of _lazy
-        tree = DateTree(lazy.pop(0)[1])  ## construct DateTree from "base" path
-
-        while lazy:
-            name, args, kargs = lazy.pop(0)  ## get next call
-
-            if type(getattr(DateTree, name)) == property:
-                tree = getattr(tree, name)
+        if DateSynced.synced:
+            if DateSynced.stamp:
+                stamp = DateSynced.stamp
             else:
-                method = getattr(tree, name)
-                tree = method(*args, **kargs)
+                stamp = DateSynced.stamp = datetime.datetime.now()
+        else:
+            stamp = datetime.datetime.now()
 
-        return tree
+        return DateTree(self._path, stamp=stamp)
 
 
     @property
-    @lazy_tree
+    def path(self):
+        return str(self)
+
+    @property
     def hour(self):
-        return DateTree(os.path.join(
-            self.path,
-            self.get_year(),
-            self.get_month(),
-            self.get_day(),
-            self.get_hour(),
-        ))
+        return DateTree(os.path.join(self._path, '%Y', '%m', '%d', '%H'), stamp=self.stamp)
 
     @property
-    @lazy_tree
     def day(self):
-        return DateTree(os.path.join(
-            self.path,
-            self.get_year(),
-            self.get_month(),
-            self.get_day(),
-        ))
+        return DateTree(os.path.join(self._path, '%Y', '%m', '%d'), stamp=self.stamp)
 
     @property
-    @lazy_tree
     def month(self):
-        return DateTree(os.path.join(
-            self.path,
-            self.get_year(),
-            self.get_month(),
-        ))
-
+        return DateTree(os.path.join(self._path, '%Y', '%m'), stamp=self.stamp)
 
     @property
-    @lazy_tree
     def year(self):
-        return DateTree(os.path.join(
-            self.path,
-            self.get_year(),
-        ))
+        return DateTree(os.path.join(self._path, '%Y'), stamp=self.stamp)
 
-    @lazy_tree
     def parent(self):
-        return DateTree(os.path.dirname(self.path))
+        return DateTree(os.path.dirname(self._path), stamp=self.stamp)
 
-    @lazy_tree
     def suffix(self, suff):
-        return DateTree(self.path + suff)
+        return DateTree(self._path + self.escape(suff), stamp=self.stamp)
 
-    @lazy_tree
     def join(self, part):
-        return DateTree(os.path.join(self.path, part))
+        return DateTree(os.path.join(self._path, self.escape(part)), stamp=self.stamp)
+
+    def escape(self, part):
+        """ Replaces all occurence of % to %% in path part.
+            This is done because internal self._path var is in strftime format.
+        """
+        return part.replace('%', '%%')
 
     def exists(self):
         return os.path.exists(self.path)
 
-    def open(self, mode, liquid=False):
+    def open(self, mode):
         return open(self.path, mode)
 
-    def liquid(self):
+    def unlink(self):
+        os.unlink(self.path)
+
+    def liquid(self, proto_class):
         """ Converts builded DateTree path into LiquidFile.
         """
-        return liquid.LiquidFile(self)
+        return proto_class(self)
 
     def makedirs(self):
         if not self.exists():
             os.makedirs(self.path)
         return self
 
-
-    def get_hour(self):
-        return datetime.datetime.now().strftime('%H')
-
-    def get_day(self):
-        return datetime.datetime.now().strftime('%d')
-
-    def get_month(self):
-        return datetime.datetime.now().strftime('%m')
-
-    def get_year(self):
-        return datetime.datetime.now().strftime('%Y')
-
-
-if __name__ == '__main__':
-    t = DateTree('./paks').hour.suffix('.sav')
-    t = t.fresh()
-    print(t._lazy)
