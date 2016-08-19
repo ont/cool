@@ -1,4 +1,3 @@
-
 #
 # TODO:
 #
@@ -26,14 +25,36 @@
 
 # TODO: better naming / design for supporting different types of indexes?
 
-import tubes
+from tree import DateSynced
+from index import FileIds, FileAgg
+from parsers import ParserWords
+
+class Index:
+    def __init__(self, tree):
+        self.tree = tree
+        self.file_ids = FileIds(self,  self.tree.minute.suffix('.idx'))
+        self.file_aggs = [
+            FileAgg(self.tree.hour.suffix('.idx')),
+            FileAgg(self.tree.day.suffix('.idx')),
+            FileAgg(self.tree.month.suffix('.idx')),
+            FileAgg(self.tree.year.suffix('.idx')),
+        ]
+
+        ## TODO: DI('parser') here ?
+        self.parser = ParserWords()
 
 
-# TODO: split it to "index" module  index/__init__.py  index/words.py ...
-class IndexWords(IndexFile)
+    def save(self, data):
+        words = self.parser(data)
+        with DateSynced():
+            self.file_ids.save(words)
+            for f in self.file_aggs:
+                f.save(words)
 
-    def start_index(self):
-        self.dict = {}
-        self.id = 0     ## id of record
 
-    def save_to_index()
+    def flush(self):
+        self.file_ids.flush()
+        for f in self.file_aggs:
+            f.flush()
+
+

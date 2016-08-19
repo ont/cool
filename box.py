@@ -9,16 +9,16 @@ class Box:
         self.name = name.decode('utf-8') if type(name) == bytes else name
         self.tree = DateTree(base).join(name)
 
-        self.pak = self.tree.hour.suffix('.pak').liquid(PakFile)
-        self.sav = self.tree.hour.suffix('.sav').liquid(SavFile)
-        #self.idx = self.tree.hour.suffix('.idx')
+        self.pak = PakFile(self.tree.hour.suffix('.pak'))
+        self.sav = SavFile(self.tree.hour.suffix('.sav'))
+        #self.idx = IndexWord(self.tree)  <--- from base
 
 
     def save(self, data):
         with DateSynced():
-            self.pak.save(data)
             self.sav.save(data)
-            #self.idx
+            self.pak.save(data)
+            #self.idx.save(data)
 
 
     def close(self):
@@ -43,3 +43,13 @@ class Box:
 # for chunk in t.flush():
 #     print chunk
 #
+
+if __name__ == "__main__":
+    import os
+    import index
+    os.system('rm -rf /tmp/index')
+    i = index.Index(DateTree('/tmp/index'))
+    i.save({'test': 'me', 'abc': 123})
+    i.save({'test': 'me', 'asdf': 123, 'ololo': 'trololo'})
+    i.save({'ololo': 'trololo', 'kkk': 'mememe'})
+    i.flush()

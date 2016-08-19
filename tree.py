@@ -41,6 +41,9 @@ class DateSynced:
     synced = False
     stamp = None
 
+    def __init__(self, stamp = None):
+        DateSynced.stamp = stamp
+
     def __enter__(self):
         DateSynced.synced = True
 
@@ -86,6 +89,10 @@ class DateTree:
         return str(self)
 
     @property
+    def minute(self):
+        return DateTree(os.path.join(self._path, '%Y', '%m', '%d', '%H', '%M'), stamp=self.stamp)
+
+    @property
     def hour(self):
         return DateTree(os.path.join(self._path, '%Y', '%m', '%d', '%H'), stamp=self.stamp)
 
@@ -124,11 +131,6 @@ class DateTree:
 
     def unlink(self):
         os.unlink(self.path)
-
-    def liquid(self, proto_class):
-        """ Converts builded DateTree path into LiquidFile.
-        """
-        return proto_class(self)
 
     def makedirs(self):
         if not self.exists():
