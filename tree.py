@@ -32,24 +32,50 @@ import datetime
 class DateSynced:
     """ Use this object in transactions where all DateTree objects must by synced in time.
 
-            with DateSynced():
-                dt1 = dt1.fresh()
-                sleep(1)
-                dt2 = dt2.fresh()
-                assert dt1.stamp == dt2.stamp, 'should fresh and equal'
+        with DateSynced():
+            dt1 = dt1.fresh()
+            sleep(1)
+            dt2 = dt2.fresh()
+            assert dt1.stamp == dt2.stamp, 'should be fresh and equal'
     """
     synced = False
+    enters = []
     stamp = None
 
     def __init__(self, stamp = None):
-        DateSynced.stamp = stamp
+        self.stamp = stamp
 
     def __enter__(self):
+        DateSynced.enters.append(None)
         DateSynced.synced = True
+        if self.stamp:
+            DateSynced.actual(self.stamp)
+
 
     def __exit__(self, *args):
-        DateSynced.synced = False
-        DateSynced.stamp = None
+        DateSynced.enters.pop()
+        if not DateSynced.enters:
+            DateSynced.synced = False
+            DateSynced.stamp = None
+
+
+    @classmethod
+    def actual(klass, stamp=None):
+        """ Returns stamp for current active lock or save "stamp" into lock.
+            If there is no locks then it simply returns "stamp".
+            If "stamp" is None then it is replaced with current time.
+        """
+        if not stamp:
+            stamp = datetime.datetime.now()
+
+        if DateSynced.synced:
+            if DateSynced.stamp:
+                stamp = DateSynced.stamp
+            else:
+                DateSynced.stamp = stamp
+
+        return stamp
+
 
 
 class DateTree:
@@ -58,10 +84,7 @@ class DateTree:
     """
 
     def __init__(self, path, stamp=None):
-        self.stamp = stamp
-        if not self.stamp:
-            self.stamp = datetime.datetime.now()
-
+        self.stamp = DateSynced.actual(stamp)
         self._path = os.path.abspath(path)
 
     def __str__(self):
@@ -73,14 +96,7 @@ class DateTree:
     def fresh(self):
         """ Returns fresh variant of DateTree for now datetime.
         """
-        if DateSynced.synced:
-            if DateSynced.stamp:
-                stamp = DateSynced.stamp
-            else:
-                stamp = DateSynced.stamp = datetime.datetime.now()
-        else:
-            stamp = datetime.datetime.now()
-
+        stamp = DateSynced.actual()
         return DateTree(self._path, stamp=stamp)
 
 

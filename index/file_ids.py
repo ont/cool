@@ -29,10 +29,15 @@ class FileIds(LiquidFile):
         self.index.flush()  ## flush whole index
 
 
+    ## TODO: mostly same code as in FileAgg
     def flush(self):
         """ This method is called by Index class
         """
         self.file.truncate(0)
+        self.file.seek(0)
 
         for chunk in self.tube(self.words_to_ids, flush=True):
             self.file.write(chunk)
+
+        self.file.flush()
+
