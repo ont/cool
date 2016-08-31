@@ -32,7 +32,8 @@ from parsers import ParserWords
 class Index:
     def __init__(self, tree):
         self.tree = tree
-        self.file_ids = FileIds(self,  self.tree.minute.suffix('.idx'))
+        self.file_ids = FileIds(self.tree.minute.suffix('.idx'))
+        self.file_ids.on_change(self.flush_aggs)
         self.file_aggs = [
             FileAgg(self.tree.hour.suffix('.idx')),
             FileAgg(self.tree.day.suffix('.idx')),
@@ -54,6 +55,10 @@ class Index:
 
     def flush(self):
         self.file_ids.flush()
+        self.flush_aggs()
+
+
+    def flush_aggs(self):
         for f in self.file_aggs:
             f.flush()
 

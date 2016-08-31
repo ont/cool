@@ -1,8 +1,8 @@
 import os
 import tubes
-from .liquid import LiquidFile
+from .liquid_stream import LiquidStreamFile
 
-class PakFile(LiquidFile):
+class PakFile(LiquidStreamFile):
     def start_file(self, file, path):
         self.tube = tubes.MsgpackTube() | tubes.ZipTube()
 

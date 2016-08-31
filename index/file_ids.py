@@ -1,21 +1,25 @@
 import tubes
-from files.liquid import LiquidFile
+from files import LiquidDataFile
 
-class FileIds(LiquidFile):
-    def __init__(self, index, tree):
-        LiquidFile.__init__(self, tree)
-        self.index = index   ## save link to parent of all IndexFiles
+class FileIds(LiquidDataFile):
+    # TODO: react on new file event (top level aggs must be flushed)
+    # TODO: ideally event handler must be in Index class
 
-
-    def start_file(self, file, path):
-        self.tube = tubes.MsgpackTube()
+    def start_data(self):
+        """ Start new file
+        """
         self.id = 0             ## current id of data packet  in *.pak file (each new .pak started from zero id)
         self.words_to_ids = {}  ## new empty map of words to ids of records
 
 
-    def save_to_file(self, file, path, words):
-        """ This method doesn't actually write to file
+    def load_data(self, data):
+        """ Resume old file
         """
+        tube = tubes.MsgunpackTube()
+        self.words_to_ids = next(tube(data, flush=True))
+
+
+    def process_data(self, words):
         for word in words:
             if word not in self.words_to_ids:
                 self.words_to_ids[word] = []
@@ -25,19 +29,6 @@ class FileIds(LiquidFile):
         self.id += 1
 
 
-    def stop_file(self, file, path):
-        self.index.flush()  ## flush whole index
-
-
-    ## TODO: mostly same code as in FileAgg
-    def flush(self):
-        """ This method is called by Index class
-        """
-        self.file.truncate(0)
-        self.file.seek(0)
-
-        for chunk in self.tube(self.words_to_ids, flush=True):
-            self.file.write(chunk)
-
-        self.file.flush()
-
+    def save_data(self):
+        tube = tubes.MsgpackTube()
+        return b''.join( tube(self.words_to_ids, flush=True) )

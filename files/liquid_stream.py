@@ -1,7 +1,7 @@
-class LiquidFile:
+class LiquidStreamFile:
     """ Abstract helper class which helps to:
           - track DateTree fresh path
-          - avoid files overwrites
+          - resolve files collisions
     """
 
     def __init__(self, tree):
@@ -34,16 +34,31 @@ class LiquidFile:
         self.tree = self.tree.fresh()
         self.tree.parent().makedirs()
 
+        self.suff = self.find_free_suffix()
+        self.file = self.tree.suffix(self.suff).open('wb')
+
+        self.start_file(self.file, self.tree.suffix(self.suff))
+
+
+    def find_free_suffix(self):
+        """ Find next suffix for filepath that doesn't exists.
+            For example:
+                /some/path/file.txt       -- exists
+                /some/path/file.txt.0001  -- exists
+                /some/path/file.txt.0002  -- doesn't exists
+                /some/path/file.txt.0003  -- exists
+
+            .. then "0002" will be returned
+        """
         n, suff = 1, ''
         while self.tree.suffix(suff).exists():
             suff, n = '.{:0>4}'.format(n), n+1
 
-        self.suff = suff
-        self.file = self.tree.suffix(suff).open('wb')
-        self.start_file(self.file, self.tree.suffix(suff))
+        return suff
 
 
     # TODO: it is better than def switch_to_file(self, ofile, nfile)   (how to start the first file problem)
+    # TODO: we need resume functionality
     def start_file(self, file, path):
         raise NotImplementedError
 
