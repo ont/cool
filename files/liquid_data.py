@@ -38,12 +38,14 @@ class LiquidDataFile:
         self.tree = self.tree.fresh()
         self.tree.parent().makedirs()
 
-        if self.tree.exists():
-            self.load(self.tree)
-        else:
-            self.start_data()
+        self.start_data()
 
-        self.file = self.tree.open('wb')
+        if self.tree.exists():
+            data = self.tree.open('rb').read()
+            self.load_data(data)
+
+        self.file = self.tree.open('ab')  ## append mode: don't truncate file after opening
+        self.file.seek(0)                 ## moving to start position  TODO: is it pointless??
 
 
     def close(self):
@@ -58,11 +60,6 @@ class LiquidDataFile:
         self.file.seek(0)
         self.file.write(data)
         self.file.flush()
-
-
-    def load(self, tree):
-        data = tree.open('rb').read()
-        self.load_data(data)
 
 
     # TODO: it is better than def switch_to_file(self, ofile, nfile)   (how to start the first file problem)

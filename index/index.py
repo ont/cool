@@ -46,11 +46,17 @@ class Index:
 
 
     def save(self, data):
-        words = self.parser(data)
+        words = self.normlize_words( self.parser(data) )
         with DateSynced():
             self.file_ids.save(words)
             for f in self.file_aggs:
                 f.save(words)
+
+
+    def normlize_words(self, words):
+        """ Converts each words from string to bytes.
+        """
+        return [bytes(x, 'utf8') for x in words]
 
 
     def flush(self):

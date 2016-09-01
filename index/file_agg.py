@@ -8,8 +8,9 @@ class FileAgg(LiquidDataFile):
 
 
     def load_data(self, data):
-        tube = tubes.MsgunpackTube()
-        self.words_to_agg = next(tube(data, flush=True))
+        if data:
+            tube = tubes.MsgunpackTube()
+            self.words_to_agg = next(tube(data, flush=True))
 
 
     def process_data(self, words):

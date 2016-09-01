@@ -15,8 +15,13 @@ class FileIds(LiquidDataFile):
     def load_data(self, data):
         """ Resume old file
         """
-        tube = tubes.MsgunpackTube()
-        self.words_to_ids = next(tube(data, flush=True))
+        if data:
+            tube = tubes.MsgunpackTube()
+            self.words_to_ids = next(tube(data, flush=True))
+
+            ## find max id for each word then take max from them
+            self.id = max([max(ids) for word, ids in self.words_to_ids.items()])
+            self.id += 1
 
 
     def process_data(self, words):
