@@ -3,27 +3,29 @@ import tubes
 import datetime
 from files import PakFile, SavFile
 from tree import DateTree, DateSynced
+from index import Index
 
 class Box:
     def __init__(self, name, base = './paks'):
         self.name = name.decode('utf-8') if type(name) == bytes else name
         self.tree = DateTree(base).join(name)
 
-        self.pak = PakFile(self.tree.hour.suffix('.pak'))
-        self.sav = SavFile(self.tree.hour.suffix('.sav'))
-        #self.idx = IndexWord(self.tree)  <--- from base
+        self.pak = PakFile(self.tree.minute.suffix('.pak'))
+        self.sav = SavFile(self.tree.minute.suffix('.sav'))
+        self.idx = Index(self.tree)
 
 
     def save(self, data):
         with DateSynced():
             self.sav.save(data)
             self.pak.save(data)
-            #self.idx.save(data)
+            self.idx.save(data)
 
 
     def close(self):
-        self.pak.close()
         self.sav.close()
+        self.pak.close()
+        self.idx.close()
 
 
 ###
@@ -45,11 +47,26 @@ class Box:
 #
 
 if __name__ == "__main__":
-    import os
-    import index
-    os.system('rm -rf /tmp/index')
-    i = index.Index(DateTree('/tmp/index'))
-    i.save({'test': 'me', 'abc': 123})
-    i.save({'test': 'me', 'asdf': 123, 'ololo': 'trololo'})
-    i.save({'ololo': 'trololo', 'kkk': 'mememe'})
-    i.flush()
+    import json
+    err = 0
+
+    b = Box('logs')
+
+    for n, l in enumerate(open('logs/full.log')):
+        if n and n % 10 == 0:
+            print('total:', n)
+            break
+
+        try:
+            data = json.loads(l)
+            dt = datetime.datetime.fromtimestamp(data[0]['REQUEST_TIME'])
+            with DateSynced(stamp=dt):
+                b.save(data)
+        except json.decoder.JSONDecodeError:
+            err += 1
+            print('err:', err)
+        #n -= 1
+        #if not n:
+        #    break
+
+    b.close()

@@ -83,8 +83,8 @@ class DateTree:
         turning them into "liquid files".
     """
 
-    def __init__(self, path, stamp=None):
-        self.stamp = DateSynced.actual(stamp)
+    def __init__(self, path, stamp=None, exact=False):
+        self.stamp = stamp if exact else DateSynced.actual(stamp)
         self._path = os.path.abspath(path)
 
     def __str__(self):
@@ -97,7 +97,7 @@ class DateTree:
         """ Returns fresh variant of DateTree for now datetime.
         """
         stamp = DateSynced.actual()
-        return DateTree(self._path, stamp=stamp)
+        return DateTree(self._path, stamp=stamp)   ## no exact
 
 
     @property
@@ -106,32 +106,32 @@ class DateTree:
 
     @property
     def minute(self):
-        return DateTree(os.path.join(self._path, '%Y', '%m', '%d', '%H', '%M'), stamp=self.stamp)
+        return DateTree(os.path.join(self._path, '%Y', '%m', '%d', '%H', '%M'), stamp=self.stamp, exact=True)
 
     @property
     def hour(self):
-        return DateTree(os.path.join(self._path, '%Y', '%m', '%d', '%H'), stamp=self.stamp)
+        return DateTree(os.path.join(self._path, '%Y', '%m', '%d', '%H'), stamp=self.stamp, exact=True)
 
     @property
     def day(self):
-        return DateTree(os.path.join(self._path, '%Y', '%m', '%d'), stamp=self.stamp)
+        return DateTree(os.path.join(self._path, '%Y', '%m', '%d'), stamp=self.stamp, exact=True)
 
     @property
     def month(self):
-        return DateTree(os.path.join(self._path, '%Y', '%m'), stamp=self.stamp)
+        return DateTree(os.path.join(self._path, '%Y', '%m'), stamp=self.stamp, exact=True)
 
     @property
     def year(self):
-        return DateTree(os.path.join(self._path, '%Y'), stamp=self.stamp)
+        return DateTree(os.path.join(self._path, '%Y'), stamp=self.stamp, exact=True)
 
     def parent(self):
-        return DateTree(os.path.dirname(self._path), stamp=self.stamp)
+        return DateTree(os.path.dirname(self._path), stamp=self.stamp, exact=True)
 
     def suffix(self, suff):
-        return DateTree(self._path + self.escape(suff), stamp=self.stamp)
+        return DateTree(self._path + self.escape(suff), stamp=self.stamp, exact=True)
 
     def join(self, part):
-        return DateTree(os.path.join(self._path, self.escape(part)), stamp=self.stamp)
+        return DateTree(os.path.join(self._path, self.escape(part)), stamp=self.stamp, exact=True)
 
     def escape(self, part):
         """ Replaces all occurence of % to %% in path part.

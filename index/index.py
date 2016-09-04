@@ -53,6 +53,13 @@ class Index:
                 f.save(words)
 
 
+    def close(self):
+        self.flush()
+        self.file_ids.close()
+        for f in self.file_aggs:
+            f.close()
+
+
     def normlize_words(self, words):
         """ Converts each words from string to bytes.
         """

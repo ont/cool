@@ -8,7 +8,8 @@ class TestBox:
     def test_correct_path(self, tmpdir):
         """ Checks that data will be saved under correct path.
         """
-        res = sh.date('+%Y/%m/%d/%H.pak').strip()
+        ## TODO: potential unstable test (race condition with timestamp in Box)
+        res = sh.date('+%Y/%m/%d/%H/%M.pak').strip()
 
         b = Box('test-box', base=str(tmpdir))
         b.save([1,2,3,4,5])
@@ -21,7 +22,8 @@ class TestBox:
     def test_sav_file(self, tmpdir):
         """ Checks that .sav file is used during saving.
         """
-        res = sh.date('+%Y/%m/%d/%H.sav').strip()
+        ## TODO: potential unstable test (race condition with timestamp in Box)
+        res = sh.date('+%Y/%m/%d/%H/%M.sav').strip()
 
         b = Box('test-box', base=str(tmpdir))
         b.save([1,2,3,4,5])

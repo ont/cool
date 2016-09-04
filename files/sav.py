@@ -12,4 +12,5 @@ class SavFile(LiquidStreamFile):
             file.flush()
 
     def stop_file(self, file, path):
-        path.unlink()
+        if path.exists():
+            path.unlink()
