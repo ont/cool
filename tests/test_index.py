@@ -131,8 +131,8 @@ class TestIndex:
                 'test': 'me'
             })
             ## crash here... Then we restart index
-            i = Index(DateTree(str(tmpdir)))
-            i.save({
+            i2 = Index(DateTree(str(tmpdir)))
+            i2.save({
                 'test': 'other'
             })
 
@@ -154,8 +154,8 @@ class TestIndex:
                 'test': 'other'
             })
             ## crash ..
-            i = Index(DateTree(str(tmpdir)))
-            i.save({
+            i2 = Index(DateTree(str(tmpdir)))
+            i2.save({
                 'test': 'some'
             })
 
@@ -178,7 +178,7 @@ class TestIndex:
         data = next(tmpdir.visit('*/06.idx')).read('rb')
         assert data == b'', "not yet flushed file"
 
-        i.flush()
+        i2.flush()
 
         data = next(tmpdir.visit('*/2001.idx')).read('rb')
         assert msgpack.unpackb(data) == {b'test': 2, b'me': 1, b'some': 1}
@@ -203,11 +203,11 @@ class TestIndex:
             i.flush()
 
             ## crash.. and restart
-            i = Index(DateTree(str(tmpdir)))
-            i.save({
+            i2 = Index(DateTree(str(tmpdir)))
+            i2.save({
                 'other': 'test'
             })
-            i.flush()
+            i2.flush()
 
         data = next(tmpdir.visit('*/05.idx')).read('rb')
         assert msgpack.unpackb(data) == {b'test': [0,1,2], b'me': [0,1], b'other': [1,2]}
