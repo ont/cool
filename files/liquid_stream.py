@@ -19,12 +19,14 @@ class LiquidStreamFile:
         if self.tree != self.tree.fresh():
             self.refresh_file()
 
-        self.save_to_file(self.file, self.tree.suffix(self.suff), data)
+        self.save_to_file(self.file, data,
+                path=self.tree.suffix(self.suff),
+                stamp=self.tree.stamp)
 
 
     def close(self):
         if self.file:
-            self.stop_file(self.file, self.tree.suffix(self.suff))
+            self.stop_file(self.file, path=self.tree.suffix(self.suff))
             self.file.close()
 
 
@@ -37,7 +39,7 @@ class LiquidStreamFile:
         self.suff = self.find_free_suffix()
         self.file = self.tree.suffix(self.suff).open('wb')
 
-        self.start_file(self.file, self.tree.suffix(self.suff))
+        self.start_file(self.file, path=self.tree.suffix(self.suff))
 
 
     def find_free_suffix(self):
@@ -59,12 +61,12 @@ class LiquidStreamFile:
 
     # TODO: it is better than def switch_to_file(self, ofile, nfile)   (how to start the first file problem)
     # TODO: we need resume functionality
-    def start_file(self, file, path):
+    def start_file(self, file, **kargs):
         raise NotImplementedError
 
-    def save_to_file(self, file, path, data):
+    def save_to_file(self, file, data, **kargs):
         raise NotImplementedError
 
-    def stop_file(self, file, path):
+    def stop_file(self, file, **kargs):
         raise NotImplementedError
 

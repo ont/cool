@@ -2,7 +2,9 @@ import sh
 import os
 import zlib
 import msgpack
+import datetime
 from box import Box
+from tree import DateSynced
 
 class TestBox:
     def test_correct_path(self, tmpdir):
@@ -23,16 +25,23 @@ class TestBox:
         """ Checks that .sav file is used during saving.
         """
         ## TODO: potential unstable test (race condition with timestamp in Box)
-        res = sh.date('+%Y/%m/%d/%H/%M.sav').strip()
+        #res = sh.date('+%Y/%m/%d/%H/%M.sav').strip()
 
-        b = Box('test-box', base=str(tmpdir))
-        b.save([1,2,3,4,5])
+        now = datetime.datetime.now()
+        with DateSynced(stamp=now):
+            b = Box('test-box', base=str(tmpdir))
+            b.save([1,2,3,4,5])
 
-        sav_file = tmpdir.join('test-box', res)
+        sav_file = tmpdir.join('test-box', now.strftime('%Y/%m/%d/%H/%M.sav'))
         print(sav_file)
         print(open(str(sav_file), 'rb').read())
         assert sav_file.check(file=1), ".sav file should exists"
-        assert sav_file.open('rb').read() == msgpack.packb([1,2,3,4,5]), ".sav file should contains serialized data"
+
+        data = {
+            'stamp': now.timetuple(),
+            'data': [1,2,3,4,5]
+        }
+        assert sav_file.open('rb').read() == msgpack.packb(data), ".sav file should contains serialized data"
 
 
     def test_sav_was_deleted(self, tmpdir):
