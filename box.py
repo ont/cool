@@ -2,17 +2,17 @@ import os
 import tubes
 import datetime
 from files import PakFile, SavFile
-from tree import DateTree, DateSynced
+from path import DatePath, DateSynced
 from index import Index
 
 class Box:
     def __init__(self, name, base = './paks'):
         self.name = name.decode('utf-8') if type(name) == bytes else name
-        self.tree = DateTree(base).join(name)
+        self.dpath = DatePath(base).join(name)
 
-        self.pak = PakFile(self.tree.minute.suffix('.pak'))
-        self.sav = SavFile(self.tree.minute.suffix('.sav'))
-        self.idx = Index(self.tree)
+        self.pak = PakFile(self.dpath.minute.suffix('.pak'))
+        self.sav = SavFile(self.dpath.minute.suffix('.sav'))
+        self.idx = Index(self.dpath)
 
 
     def save(self, data):

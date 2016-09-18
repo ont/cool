@@ -1,14 +1,14 @@
 class LiquidDataFile:
     """ Abstract helper class which helps to:
-          - track DateTree fresh path
+          - track DatePath fresh path
           - load old data from file (resuming after crash)
           - save data to file (rewriting old file content with new one)
     """
 
-    def __init__(self, tree):
-        """ tree: DateTree path which needs to be tracked
+    def __init__(self, dpath):
+        """ dpath: DatePath path which needs to be tracked
         """
-        self.tree = tree
+        self.dpath = dpath
         self.file = None
         self.on_change_callb = lambda *x: x  ## nop callback by default
         self.refresh_file()
@@ -18,7 +18,7 @@ class LiquidDataFile:
         """ Main method to use. Data will be processed and saved in class
             variables (internal buffer).
         """
-        if self.tree != self.tree.fresh():
+        if self.dpath != self.dpath.fresh():
             self.on_change()
             self.refresh_file()
 
@@ -35,16 +35,16 @@ class LiquidDataFile:
     def refresh_file(self):
         self.close()
 
-        self.tree = self.tree.fresh()
-        self.tree.parent().makedirs()
+        self.dpath = self.dpath.fresh()
+        self.dpath.parent().makedirs()
 
         self.start_data()
 
-        if self.tree.exists():
-            data = self.tree.open('rb').read()
+        if self.dpath.exists():
+            data = self.dpath.open('rb').read()
             self.load_data(data)
 
-        self.file = self.tree.open('ab')  ## append mode: don't truncate file after opening
+        self.file = self.dpath.open('ab')  ## append mode: don't truncate file after opening
         self.file.seek(0)                 ## moving to start position  TODO: is it pointless??
 
 

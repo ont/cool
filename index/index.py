@@ -25,20 +25,20 @@
 
 # TODO: better naming / design for supporting different types of indexes?
 
-from tree import DateSynced
+from path import DateSynced
 from index import FileIds, FileAgg
 from parsers import ParserWords
 
 class Index:
-    def __init__(self, tree):
-        self.tree = tree
-        self.file_ids = FileIds(self.tree.minute.suffix('.idx'))
+    def __init__(self, dpath):
+        self.dpath = dpath
+        self.file_ids = FileIds(self.dpath.minute.suffix('.idx'))
         self.file_ids.on_change(self.flush_aggs)
         self.file_aggs = [
-            FileAgg(self.tree.hour.suffix('.idx')),
-            FileAgg(self.tree.day.suffix('.idx')),
-            FileAgg(self.tree.month.suffix('.idx')),
-            FileAgg(self.tree.year.suffix('.idx')),
+            FileAgg(self.dpath.hour.suffix('.idx')),
+            FileAgg(self.dpath.day.suffix('.idx')),
+            FileAgg(self.dpath.month.suffix('.idx')),
+            FileAgg(self.dpath.year.suffix('.idx')),
         ]
 
         ## TODO: DI('parser') here ?

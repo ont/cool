@@ -4,7 +4,7 @@ import zlib
 import msgpack
 import datetime
 from box import Box
-from tree import DateSynced
+from path import DateSynced
 
 class TestBox:
     def test_correct_path(self, tmpdir):
