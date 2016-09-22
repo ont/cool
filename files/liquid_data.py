@@ -1,8 +1,8 @@
 class LiquidDataFile:
     """ Abstract helper class which helps to:
           - track DatePath fresh path
-          - load old data from file (resuming after crash)
-          - save data to file (rewriting old file content with new one)
+          - load old data from file (resuming data saving)
+          - save data to file (replacing old file content with new one)
     """
 
     def __init__(self, dpath):

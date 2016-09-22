@@ -1,4 +1,6 @@
 import os
+import glob
+import fnmatch
 import datetime
 
 #
@@ -153,3 +155,18 @@ class DatePath:
             os.makedirs(self.path)
         return self
 
+
+    def find(self, pattern, recursive=True):
+        """ Searches for files in self.path
+
+            :recursive: if true then search in current path and in all subfolders
+            :returns: iterator (list of founded files)
+
+            TODO: return DatePath's instead of strings
+        """
+        if not recursive:
+            return glob.glob(pattern)
+
+        for root, dirs, files in os.walk(self.path):
+            for file in fnmatch.filter(files, pattern):
+                yield os.path.join(root, file)
