@@ -26,6 +26,13 @@ class ParserWords:
         elif type(data) == str:
             return self.extract(data)
 
+        elif type(data) == bytes:
+            try:
+                s = data.decode('utf8')
+            except:
+                return set()
+
+            return self.extract(s)
         else:
             return set()
 
@@ -33,7 +40,7 @@ class ParserWords:
     def extract(self, string):
         words = set()
         for word in self.re_split.split(string):
-            if len(word) <= 32:
+            if 0 < len(word) <= 32:
                 words.add(word)
 
         return words

@@ -42,3 +42,16 @@ class TestParser:
         words = p(data)
         assert words == set(['123', 'abc', 'zxy', 'it', 'may', 'work',
             'aww', 'me', 'and', 'here', 'test', 'md5md5md5md5md5md5md5md5md5md512']), "only small single words"
+
+
+    def test_bytes(self):
+        """ Test extracting words from 'bytes' type
+        """
+        p = ParserWords()
+        data = {
+            b'test': [b'some', b'more'],
+            b'\x11\x12bytes' : 123,
+            b'\xff\xffasdf' : 123,   ## TODO: add extractor for this case
+        }
+        words = p(data)
+        assert words == set(['test', 'some', 'more', 'bytes'])
