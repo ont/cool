@@ -129,6 +129,9 @@ class DatePath:
     def parent(self):
         return DatePath(os.path.dirname(self._path), stamp=self.stamp, exact=True)
 
+    def basename(self):
+        return os.path.basename(self._path)
+
     def suffix(self, suff):
         return DatePath(self._path + self.escape(suff), stamp=self.stamp, exact=True)
 
@@ -156,7 +159,7 @@ class DatePath:
         return self
 
 
-    def find(self, pattern, recursive=True):
+    def find(self, recursive=True):
         """ Searches for files in self.path
 
             :recursive: if true then search in current path and in all subfolders
@@ -165,8 +168,9 @@ class DatePath:
             TODO: return DatePath's instead of strings
         """
         if not recursive:
-            return glob.glob(pattern)
+            return glob.glob(self.path)
 
-        for root, dirs, files in os.walk(self.path):
+        pattern = self.basename()
+        for root, dirs, files in os.walk(self.parent().path):
             for file in fnmatch.filter(files, pattern):
                 yield os.path.join(root, file)

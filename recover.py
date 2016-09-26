@@ -40,19 +40,32 @@ class Recover:
         ## using DatePath here just for easy files finding
         dp = DatePath(self.base).join(self.name)
 
-        savs = itertools.chain(
-            dp.find('*.sav', recursive=True),
-            dp.find('*.sav.????', recursive=True)
-        )
-
+        savs = dp.join('*.sav').find(recursive=True)
         for sav in savs:
-            self.recover_sav(sav)
+            self.recover_group(sav)
 
 
-    def recover_sav(self, sav):
-        """Recover (replays) single sav file
+    def recover_group(self, sav):
+        """Recover (replays) sav file and all its incremental neighbors
 
-        :sav: sav file to recover
+        :sav: sav file without increment suffix
+
+        """
+        box = self.recover_sav(sav, None)
+
+        savs_inc = DatePath(sav).suffix('.????').find()
+        for sav in savs_inc:
+            self.recover_sav(sav, box)
+
+        box.close()
+
+
+    def recover_sav(self, sav, box):
+        """Recover single sav file
+
+        :sav: file to recover
+        :box: temporary box for group of sav files or None if it must be created
+        :returns: box
 
         """
         pak = self.get_pak(sav)
@@ -67,7 +80,6 @@ class Recover:
 
         os.unlink(sav)
 
-        box = None
         for record in self.tube(data):
             stamp = datetime.datetime( *record[b'stamp'][:5] )  ## take first 5 numbers (year, month, day, hour, minute)
             with DateSynced(stamp=stamp):
@@ -75,7 +87,7 @@ class Recover:
                     box = Box(self.name, base=self.base)
                 box.save(record[b'data'])
 
-        box.close()
+        return box
 
 
     def get_pak(self, sav):
