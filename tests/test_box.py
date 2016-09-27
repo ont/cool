@@ -5,8 +5,11 @@ import msgpack
 import datetime
 from box import Box
 from path import DateSynced
+from tools import TestTools
 
-class TestBox:
+class TestBox(TestTools):
+    date1 = datetime.datetime(2001, 2, 3, 4, 5)
+
     def test_correct_path(self, tmpdir):
         """ Checks that data will be saved under correct path.
         """
@@ -59,36 +62,34 @@ class TestBox:
     def test_data_inside_pak(self, tmpdir):
         """ Checks content of .pak file
         """
-
-        b = Box('test-box', base=str(tmpdir))
-        b.save([1,2,3,4,5])
-        b.close()
+        with DateSynced(stamp=self.date1):
+            b = Box('test-box', base=str(tmpdir))
+            b.save([1,2,3,4,5])
+            b.close()
 
         paks = list(tmpdir.visit('*.pak'))
 
         assert len(paks) == 1, "only one .pak should be created"
 
-        data = paks[0].open('rb').read()
+        data = self.get_pak(tmpdir, '*.pak')
 
-        data = zlib.decompress(data)
-        data = msgpack.unpackb(data)
-
-        assert data == [1,2,3,4,5], "restored data from .pak should be [1,2,3,4,5]"
+        assert data == [[2001, 2, 3, 4, 5], [1,2,3,4,5]], "restored data from .pak should be [1,2,3,4,5]"
 
 
     def test_savs_and_paks_after_crash(self, tmpdir):
-        b = Box('test-box', base=str(tmpdir))  ## HH.sav
-        b.save([1,2,3,4,5])
+        with DateSynced(stamp=self.date1):
+            b = Box('test-box', base=str(tmpdir))  ## HH.sav
+            b.save([1,2,3,4,5])
 
-        b = Box('test-box', base=str(tmpdir))  ## HH.sav.0001 (restarting box, emulating crash)
-        b.save([1,2,3,4,5])
+            b = Box('test-box', base=str(tmpdir))  ## HH.sav.0001 (restarting box, emulating crash)
+            b.save([1,2,3,4,5])
 
-        b = Box('test-box', base=str(tmpdir))  ## HH.sav.0002
-        b.save([1,2,3,4,5])
+            b = Box('test-box', base=str(tmpdir))  ## HH.sav.0002
+            b.save([1,2,3,4,5])
 
-        b = Box('test-box', base=str(tmpdir))  ## HH.sav.0003
-        b.save([1,2,3,4,5])
-        b.close()                              ## .. and normaly close it (HH.sav.0003 will be deleted)
+            b = Box('test-box', base=str(tmpdir))  ## HH.sav.0003
+            b.save([1,2,3,4,5])
+            b.close()                              ## .. and normaly close it (HH.sav.0003 will be deleted)
 
         savs = list(tmpdir.visit('*.sav*'))
         assert len(savs) == 3, "total amount of .sav files should be 3 (*.sav, *.sav.0001 and *.sav.0002)"
@@ -108,7 +109,5 @@ class TestBox:
         contents = [ x.open('rb').read() for x in paks ]  ## content of each .pak
         assert len(set(contents)) == 2, "three broken (equal) and one normal .pak"
 
-        data = next(tmpdir.visit('*.pak.0003')).read('rb')
-        data = zlib.decompress(data)
-        data = msgpack.unpackb(data)
-        assert data == [1,2,3,4,5], "restored data from normal .pak should be [1,2,3,4,5]"
+        data = self.get_pak(tmpdir, '*.pak.0003')
+        assert data == [[2001,2,3,4,5],[1,2,3,4,5]], "restored data from normal .pak should be [1,2,3,4,5]"

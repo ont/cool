@@ -3,8 +3,14 @@ import tubes
 from .liquid_stream import LiquidStreamFile
 
 class PakFile(LiquidStreamFile):
-    def start_file(self, file, **kargs):
+    def start_file(self, file, stamp=None, **kargs):
         self.tube = tubes.MsgpackTube() | tubes.ZipTube()
+
+        ## save stamp to pak as first data entry
+        stamp = stamp.timetuple()[:5]
+        for chunk in self.tube(stamp):
+            file.write(chunk)
+
 
     def save_to_file(self, file, data, **kargs):
         for chunk in self.tube(data):

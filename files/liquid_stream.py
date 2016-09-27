@@ -19,9 +19,11 @@ class LiquidStreamFile:
         if self.dpath != self.dpath.fresh():
             self.refresh_file()
 
-        self.save_to_file(self.file, data,
-                path=self.dpath.suffix(self.suff),
-                stamp=self.dpath.stamp)
+        self.save_to_file(
+            self.file, data,
+            path=self.dpath.suffix(self.suff),
+            stamp=self.dpath.stamp
+        )
 
 
     def close(self):
@@ -39,7 +41,11 @@ class LiquidStreamFile:
         self.suff = self.find_free_suffix()
         self.file = self.dpath.suffix(self.suff).open('wb')
 
-        self.start_file(self.file, path=self.dpath.suffix(self.suff))
+        self.start_file(
+            self.file,
+            path=self.dpath.suffix(self.suff),
+            stamp=self.dpath.stamp
+        )
 
 
     def find_free_suffix(self):
