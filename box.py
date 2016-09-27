@@ -18,15 +18,15 @@ class Box:
 
     def save(self, data):
         with DateSynced():
-            self.sav.save(data)
             self.pak.save(data)
             self.idx.save(data)
+            self.sav.save(data)
 
 
     def close(self):
-        self.sav.close()
         self.pak.close()
         self.idx.close()
+        self.sav.close()
 
 
 ###
