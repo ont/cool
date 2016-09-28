@@ -28,7 +28,7 @@ class Recover:
         :name: name of box to recover
         :base: optional base path for box
     """
-    def __init__(self, name, base='./paks'):
+    def __init__(self, name, base='./boxes'):
         self.name = name
         self.base = base
         self.tube = MsgunpackTube()

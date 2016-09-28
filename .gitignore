@@ -1,0 +1,7 @@
+.coverage
+TODO.txt
+__pycache__/
+tests/.cache/
+*.pyc
+*.orig
+

@@ -6,7 +6,7 @@ from path import DatePath, DateSynced
 from index import Index
 
 class Box:
-    def __init__(self, name, base = './paks'):
+    def __init__(self, name, base = './boxes'):
         self.name = name.decode('utf-8') if type(name) == bytes else name
         self.base = base
         self.dpath = DatePath(base).join(name)

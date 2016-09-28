@@ -1,21 +1,24 @@
-import zlib
+import os
+import glob
 import click
 import tubes
 import signal
 import asyncio
-import msgpack
 
 from box import Box
 
 class Server:
+    box_base = './boxes'  ## TODO: move to config
+
     def __init__(self, host='127.0.0.1', port=26100):
         self.loop = asyncio.get_event_loop()
         coro = asyncio.start_server(self.handle_connection, host=host, port=port)
         asyncio.ensure_future(coro)
 
         self.boxes = {}
-        for s in (signal.SIGINT, signal.SIGTERM):
-            self.loop.add_signal_handler(s, self.close)
+        self.load_boxes()
+
+        self.install_signals()
 
 
     async def handle_connection(self, reader, writer):
@@ -38,6 +41,18 @@ class Server:
         self.loop.run_forever()
 
 
+    def load_boxes(self):
+        for file in glob.glob(self.box_base + '/*'):
+            if os.path.isdir(file):
+                name = os.path.basename(file)
+                ## do recover after possible crash
+                r = Recover(name, self.box_base)
+                r.recover()
+
+                self.boxes[name] = Box(name, self.box_base)
+
+
+
     def get_tube(self):
         return tubes.UnzipTube() | tubes.MsgunpackTube()
 
@@ -45,9 +60,14 @@ class Server:
     def get_box(self, name):
         box = self.boxes.get(name)
         if not box:
-            box = self.boxes[name] = Box(name)
+            box = self.boxes[name] = Box(name, self.box_base)
 
         return box
+
+
+    def install_signals(self):
+        for s in (signal.SIGINT, signal.SIGTERM):
+            self.loop.add_signal_handler(s, self.close)
 
 
     def close(self):
