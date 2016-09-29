@@ -9,6 +9,12 @@ class TestBox(TestTools):
     date1 = datetime.datetime(2001, 2, 3, 4, 5)
     date2 = datetime.datetime(2001, 2, 3, 4, 6)
 
+    def test_name_as_bytes(self, tmpdir):
+        """ Check that bytes instead of string doesn't crash recoverer
+        """
+        r = Recover(b'test-box', base=str(tmpdir))
+
+
     def test_simple_recover(self, tmpdir):
         """ Tests recovering after one crash
         """

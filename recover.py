@@ -29,7 +29,7 @@ class Recover:
         :base: optional base path for box
     """
     def __init__(self, name, base='./boxes'):
-        self.name = name
+        self.name = name.decode('utf-8') if type(name) == bytes else name
         self.base = base
         self.tube = MsgunpackTube()
 

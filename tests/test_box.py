@@ -10,6 +10,10 @@ from tools import TestTools
 class TestBox(TestTools):
     date1 = datetime.datetime(2001, 2, 3, 4, 5)
 
+    def test_name_as_bytes(self, tmpdir):
+        b = Box(b'bytestring', base=str(tmpdir))
+        ## no exception should be thrown
+
     def test_correct_path(self, tmpdir):
         """ Checks that data will be saved under correct path.
         """

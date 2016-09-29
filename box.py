@@ -9,7 +9,7 @@ class Box:
     def __init__(self, name, base = './boxes'):
         self.name = name.decode('utf-8') if type(name) == bytes else name
         self.base = base
-        self.dpath = DatePath(base).join(name)
+        self.dpath = DatePath(base).join(self.name)
 
         self.pak = PakFile(self.dpath.minute.suffix('.pak'))
         self.sav = SavFile(self.dpath.minute.suffix('.sav'))
