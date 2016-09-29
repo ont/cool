@@ -12,7 +12,7 @@ class TestParser:
         }
         words = p(data)
 
-        assert words == set(['test', 'me', 'it', 'may', 'work', 'md5md5md5md5md5md5md5md5md5md512']), "only small single words"
+        assert words == set(['123', 'test', 'me', 'it', 'may', 'work', 'md5md5md5md5md5md5md5md5md5md512']), "only small single words"
 
 
     def test_list_tuple(self):
@@ -54,4 +54,4 @@ class TestParser:
             b'\xff\xffasdf' : 123,   ## TODO: add extractor for this case
         }
         words = p(data)
-        assert words == set(['test', 'some', 'more', 'bytes'])
+        assert words == set(['123', 'test', 'some', 'more', 'bytes'])

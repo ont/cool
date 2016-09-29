@@ -33,6 +33,9 @@ class ParserWords:
                 return set()
 
             return self.extract(s)
+
+        elif type(data) == int:
+            return set([ str(data) ])
         else:
             return set()
 
