@@ -3,31 +3,40 @@ import tubes
 import datetime
 from files import PakFile, SavFile
 from path import DatePath, DateSynced
-from index import Index
 
 class Box:
-    def __init__(self, name, base = './boxes'):
+    def __init__(self, name, base = './boxes', indexes = None):
         self.name = name.decode('utf-8') if type(name) == bytes else name
         self.base = base
         self.dpath = DatePath(base).join(self.name)
 
         self.pak = PakFile(self.dpath.minute.suffix('.pak'))
         self.sav = SavFile(self.dpath.minute.suffix('.sav'))
-        self.idx = Index(self.dpath)
+
+        self.idxs = indexes if indexes else []
 
 
-    def save(self, data):
+    def save(self, data, backup=True):
         with DateSynced():
             self.pak.save(data)
-            self.idx.save(data)
-            self.sav.save(data)
+
+            if backup:
+                self.sav.save(data)
+
+            for idx in self.idxs:
+                idx.save(data)
 
 
     def close(self):
         self.pak.close()
-        self.idx.close()
         self.sav.close()
 
+        for idx in self.idxs:
+            idx.close()
+
+
+    def __repr__(self):
+        return '<Box idxs={}>'.format(repr(self.idxs))
 
 ###
 # TODO: must be rewritten to iterators

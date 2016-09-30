@@ -1,6 +1,6 @@
 import re
 
-class ParserWords:
+class Parser:
     def __init__(self):
         ## TODO: only russian lang?
         self.re_split = re.compile(r'[^a-zа-я0-9]+', re.I)
@@ -47,3 +47,7 @@ class ParserWords:
                 words.add(word)
 
         return words
+
+
+    def __repr__(self):
+        return 'words'

@@ -1,0 +1,46 @@
+###
+# WARN: POSSIBLE VARIANT OF CONFIG
+#
+# Example of indexes configuration for different boxes.
+###
+options:
+    storage: /data
+
+boxes:
+    request:
+        indexes:
+            - type: hash
+              parser: http-code
+
+            - type: hash
+              parser: http-method
+
+            - type: hash
+              # TODO: does it really helps in searching? Full scan vs dirty hash scan.
+              parser: words
+
+            - type: solid
+              parser: http-response-time
+              options:
+                  # this determines intervals for aggregations: 0ms-10ms, 10ms-50ms, 50ms-100ms, ...
+                  steps: [10,50,100,150,200,300,500,1000]
+
+    response:
+        indexes: ~
+
+    file:
+        indexes:
+            - type: hash
+              parser: file-type
+
+            - type: solid
+              parser: file-size
+              #TODO: default steps
+
+            - type: solid
+              parser: file-image-width
+              #TODO: default steps
+
+            - type: solid
+              parser: file-image-height
+              #TODO: default steps

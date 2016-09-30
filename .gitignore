@@ -1,7 +1,9 @@
+.cache/
 .coverage
 TODO.txt
 __pycache__/
 tests/.cache/
+venv/
 *.pyc
 *.orig
 

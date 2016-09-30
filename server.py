@@ -8,17 +8,24 @@ import signal
 import asyncio
 
 from box import Box
+from config import Config
 from recover import Recover
 
 class Server:
-    def __init__(self, host='127.0.0.1', port=26100, storage='./boxes'):
+    def __init__(self, host='127.0.0.1', port=26100, config=None):
+        """
+        :host: host to listen on
+        :port: port to listen on
+        :config: configurator object (probably it is instance of "Config" class)
+        """
         self.loop = asyncio.get_event_loop()
         coro = asyncio.start_server(self.handle_connection, host=host, port=port)
         asyncio.ensure_future(coro)
 
-        self.storage = storage
+        self.config = config
 
         self.boxes = {}
+        self.recover_boxes()
         self.load_boxes()
 
         self.install_signals()
@@ -30,7 +37,7 @@ class Server:
 
         while True:
             chunk = await reader.read(1024)
-            print(chunk)
+            print('net:', chunk)
 
             for packet in tube(chunk, flush=(not chunk)):
                 box = self.get_box(packet[b'box'])
@@ -44,29 +51,38 @@ class Server:
                 break
 
 
+    def get_tube(self):
+        return tubes.UnzipTube() | tubes.MsgunpackTube()
+
+
     def start(self):
         self.loop.run_forever()
 
 
-    def load_boxes(self):
-        for file in glob.glob(self.storage + '/*'):
+    def recover_boxes(self):
+        ## TODO: rewrite it to single recoverer of all boxes with DI
+        for file in glob.glob(self.config.storage + '/*'):
             if os.path.isdir(file):
                 name = bytes(os.path.basename(file), 'utf8')
-                ## do recover after possible crash
-                r = Recover(name, self.storage)
-                r.recover()
 
-                self.boxes[name] = Box(name, self.storage)
+                ## do recover of single box after possible crash
+                Recover().recover( self.config.load_box(name) )
 
 
-    def get_tube(self):
-        return tubes.UnzipTube() | tubes.MsgunpackTube()
+    def load_boxes(self):
+        boxes = self.config.load_boxes()
+        print('loaded boxes:', boxes)
+        for box in boxes:
+            name = bytes(box.name, 'utf8')
+            self.boxes[name] = box
+
 
 
     def get_box(self, name):
         box = self.boxes.get(name)
         if not box:
-            box = self.boxes[name] = Box(name, self.storage)
+            ## create box with no indexes
+            box = self.boxes[name] = Box(name, self.config.storage)
 
         return box
 
@@ -87,12 +103,11 @@ class Server:
 @click.command()
 @click.option('--host', default='127.0.0.1', help='Host to listen on (default: 127.0.0.1).')
 @click.option('--port', default=26100, help='Port to listen on (default: 26100).')
-@click.option('--storage', help='Directory where all compressed logs will be saved (default: ./boxes). Also can be specified via COOL_STORAGE environment variable.')
-def main(host, port, storage):
-    if not storage:
-        storage = os.getenv('COOL_STORAGE', './boxes')
+@click.option('--config', default='./etc/cool/config.yml', help='Path to config file (default: /etc/cool/config.yml).')
+def main(host, port, config):
+    config = Config(config)
 
-    s = Server(host, port, storage)
+    s = Server(host, port, config)
     s.start()
 
 

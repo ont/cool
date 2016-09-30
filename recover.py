@@ -24,70 +24,61 @@ class Recover:
         Basic steps of recovering process:
           1. found all *.sav files
           2. for each founded .sav replay all saved data
-
-        :name: name of box to recover
-        :base: optional base path for box
     """
-    def __init__(self, name, base='./boxes'):
-        self.name = name.decode('utf-8') if type(name) == bytes else name
-        self.base = base
-        self.tube = MsgunpackTube()
 
 
-    def recover(self):
-        """ Starts recoverting process.
+    def recover(self, box):
+        """ Starts recoverting process for box.
+
+        :box: box to recover
+
         """
-        ## using DatePath here just for easy files finding
-        dp = DatePath(self.base).join(self.name)
+        self.box = box
 
-        savs = dp.join('*.sav').find(recursive=True)
+        savs = self.box.dpath.join('*.sav').find(recursive=True)
         for sav in savs:
             self.recover_group(sav)
 
+        self.box.close()
+
 
     def recover_group(self, sav):
-        """Recover (replays) sav file and all its incremental neighbors
+        """Recover (replays) sav file and all its incremental neighbors.
 
-        :sav: sav file without increment suffix
+        :sav: sav file without increment suffix.
 
         """
-        box = self.recover_sav(sav, None)
+        self.recover_sav(sav)
 
         savs_inc = DatePath(sav).suffix('.????').find()
         for sav in savs_inc:
-            self.recover_sav(sav, box)
-
-        box.close()
+            self.recover_sav(sav)
 
 
-    def recover_sav(self, sav, box):
-        """Recover single sav file
+    def recover_sav(self, sav):
+        """Recover single sav file.
 
         :sav: file to recover
-        :box: temporary box for group of sav files or None if it must be created
-        :returns: box
 
         """
         pak = self.get_pak(sav)
         if os.path.exists(pak):
             os.unlink(pak)
 
+
         try:
+            tube = MsgunpackTube()
             data = open(sav, 'rb').read()
-        except:
+
+            for record in tube(data):
+                stamp = datetime.datetime( *record[b'stamp'][:5] )  ## take first 5 numbers (year, month, day, hour, minute)
+                with DateSynced(stamp=stamp):
+                    self.box.save(record[b'data'], backup=False)
+
+        finally:
             ## TODO: log about failed sav file
-            return  ## skip broken sav...
+            os.unlink(sav)
 
-        os.unlink(sav)
-
-        for record in self.tube(data):
-            stamp = datetime.datetime( *record[b'stamp'][:5] )  ## take first 5 numbers (year, month, day, hour, minute)
-            with DateSynced(stamp=stamp):
-                if not box:
-                    box = Box(self.name, base=self.base)
-                box.save(record[b'data'])
-
-        return box
 
 
     def get_pak(self, sav):

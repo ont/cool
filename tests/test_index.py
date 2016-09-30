@@ -1,12 +1,13 @@
 import msgpack
 import datetime
 from path import DatePath, DateSynced
-from index import Index
+from indexes.hash import Index
+from parsers.words import Parser
 
 class TestIndex:
     def test_simple(self, tmpdir):
         with DateSynced(stamp=datetime.datetime(2001, 2, 3, 4, 5)):
-            i = Index(DatePath(str(tmpdir)))
+            i = Index(DatePath(str(tmpdir)), Parser())
             i.save({
                 'test': 'me'
             })
@@ -30,7 +31,7 @@ class TestIndex:
 
     def test_multiple_writes(self, tmpdir):
         with DateSynced(stamp=datetime.datetime(2001, 2, 3, 4, 5)):
-            i = Index(DatePath(str(tmpdir)))
+            i = Index(DatePath(str(tmpdir)), Parser())
             i.save({
                 'test': 'me'
             })
@@ -77,7 +78,7 @@ class TestIndex:
 
     def test_time_moving(self, tmpdir):
         with DateSynced(stamp=datetime.datetime(2001, 2, 3, 4, 5)):
-            i = Index(DatePath(str(tmpdir)))
+            i = Index(DatePath(str(tmpdir)), Parser())
             i.save({
                 'test': 'me'
             })
@@ -126,12 +127,12 @@ class TestIndex:
 
     def test_crash(self, tmpdir):
         with DateSynced(stamp=datetime.datetime(2001, 2, 3, 4, 5)):
-            i = Index(DatePath(str(tmpdir)))
+            i = Index(DatePath(str(tmpdir)), Parser())
             i.save({
                 'test': 'me'
             })
             ## crash here... Then we restart index
-            i2 = Index(DatePath(str(tmpdir)))
+            i2 = Index(DatePath(str(tmpdir)), Parser())
             i2.save({
                 'test': 'other'
             })
@@ -144,7 +145,7 @@ class TestIndex:
 
     def test_crash_after_time_movement(self, tmpdir):
         with DateSynced(stamp=datetime.datetime(2001, 2, 3, 4, 5)):
-            i = Index(DatePath(str(tmpdir)))
+            i = Index(DatePath(str(tmpdir)), Parser())
             i.save({
                 'test': 'me'
             })
@@ -154,7 +155,7 @@ class TestIndex:
                 'test': 'other'
             })
             ## crash ..
-            i2 = Index(DatePath(str(tmpdir)))
+            i2 = Index(DatePath(str(tmpdir)), Parser())
             i2.save({
                 'test': 'some'
             })
@@ -193,7 +194,7 @@ class TestIndex:
 
     def test_restoring_id_after_crash(self, tmpdir):
         with DateSynced(stamp=datetime.datetime(2001, 2, 3, 4, 5)):
-            i = Index(DatePath(str(tmpdir)))
+            i = Index(DatePath(str(tmpdir)), Parser())
             i.save({
                 'test': 'me'
             })
@@ -203,7 +204,7 @@ class TestIndex:
             i.flush()
 
             ## crash.. and restart
-            i2 = Index(DatePath(str(tmpdir)))
+            i2 = Index(DatePath(str(tmpdir)), Parser())
             i2.save({
                 'other': 'test'
             })

@@ -1,10 +1,10 @@
-from parsers import ParserWords
+from parsers.words import Parser
 
 class TestParser:
     def test_dict(self):
         """ Checks dict data type
         """
-        p = ParserWords()
+        p = Parser()
         data = {
             'test': 'test',
             'me': 'me md5md5md5md5md5md5md5md5md5md512',
@@ -18,7 +18,7 @@ class TestParser:
     def test_list_tuple(self):
         """ Checks list and tuple data type (iterables)
         """
-        p = ParserWords()
+        p = Parser()
         data = ['123', 123, 123.0, ('abc zxy', 'aww'), [[['me', 'and me here']]]]
         words = p(data)
         assert words == set(['123', 'abc', 'zxy', 'aww', 'me', 'and', 'here']), "only small single words"
@@ -27,7 +27,7 @@ class TestParser:
     def test_list_recursive(self):
         """ Checks list and tuple data type (iterables)
         """
-        p = ParserWords()
+        p = Parser()
         data = [
             '123', 123, 123.0, (
                 'abc zxy', 'aww', {
@@ -47,7 +47,7 @@ class TestParser:
     def test_bytes(self):
         """ Test extracting words from 'bytes' type
         """
-        p = ParserWords()
+        p = Parser()
         data = {
             b'test': [b'some', b'more'],
             b'\x11\x12bytes' : 123,

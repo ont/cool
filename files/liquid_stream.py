@@ -10,13 +10,13 @@ class LiquidStreamFile:
         self.dpath = dpath
         self.file = None
         self.suff = ''
-        self.refresh_file()
+        #self.refresh_file()
 
 
     def save(self, data):
         """ Main method to use. Data will be saved to correct file.
         """
-        if self.dpath != self.dpath.fresh():
+        if not self.file or self.dpath != self.dpath.fresh():
             self.refresh_file()
 
         self.save_to_file(

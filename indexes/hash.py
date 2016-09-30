@@ -27,8 +27,8 @@
 
 from path import DateSynced
 
-from hash_agg import FileAgg
-from hash_idx import FileIds
+from .hash_agg import FileAgg
+from .hash_ids import FileIds
 
 class Index:
     def __init__(self, dpath, parser):
@@ -76,3 +76,5 @@ class Index:
             f.flush()
 
 
+    def __repr__(self):
+        return 'hash<{}>'.format(repr(self.parser))

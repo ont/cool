@@ -1,33 +1,29 @@
 import os
 import datetime
 from box import Box
-from path import DateSynced
+from path import DateSynced, DatePath
 from tools import TestTools
 from recover import Recover
+from indexes.hash import Index
+from parsers.words import Parser
 
 class TestBox(TestTools):
     date1 = datetime.datetime(2001, 2, 3, 4, 5)
     date2 = datetime.datetime(2001, 2, 3, 4, 6)
-
-    def test_name_as_bytes(self, tmpdir):
-        """ Check that bytes instead of string doesn't crash recoverer
-        """
-        r = Recover(b'test-box', base=str(tmpdir))
 
 
     def test_simple_recover(self, tmpdir):
         """ Tests recovering after one crash
         """
         with DateSynced(stamp=self.date1):
-            b = Box('test-box', base=str(tmpdir))
+            b = self.get_box(str(tmpdir))
             b.save(['aaa', 'bbb', 'ccc'])
             b.save(['aaa', 'ccc', 'ddd'])
 
         savs = list(tmpdir.visit('*.sav'))
         assert len(savs) == 1, "one *.sav for backup"
 
-        r = Recover('test-box', base=str(tmpdir))
-        r.recover()
+        Recover().recover(self.get_box(str(tmpdir)))
 
         savs = list(tmpdir.visit('*.sav'))
         assert len(savs) == 0, "after recovering no *.sav files must exist"
@@ -42,7 +38,7 @@ class TestBox(TestTools):
         """ Test recovering after multiple crashes
         """
         with DateSynced(stamp=self.date1):
-            b = Box('test-box', base=str(tmpdir))
+            b = self.get_box(str(tmpdir))
             b.save(['aaa', 'bbb', 'ccc'])
             b.save(['aaa', 'bbb', 'ddd'])
 
@@ -51,7 +47,7 @@ class TestBox(TestTools):
         ## ...
 
         with DateSynced(stamp=self.date2):
-            b = Box('test-box', base=str(tmpdir))
+            b = self.get_box(str(tmpdir))
             b.save(['after crash1'])
 
         ## ...
@@ -59,14 +55,13 @@ class TestBox(TestTools):
         ## ...
 
         with DateSynced(stamp=self.date2):
-            b = Box('test-box', base=str(tmpdir))
+            b = self.get_box(str(tmpdir))
             b.save(['after crash2'])
 
         savs = list(tmpdir.visit('*.sav*'))
         assert len(savs) == 3, "05.sav, 06.sav and 06.sav.0001"
 
-        r = Recover('test-box', base=str(tmpdir))
-        r.recover()
+        Recover().recover(self.get_box(str(tmpdir)))
 
         savs = list(tmpdir.visit('*.sav'))
         assert len(savs) == 0, "after recovering no *.sav files must exist"
@@ -84,3 +79,14 @@ class TestBox(TestTools):
 
         idx = self.get_idx(tmpdir, '03.idx')
         assert idx == {b'after':2, b'crash1':1, b'crash2':1, b'aaa':2, b'bbb':2, b'ccc':1, b'ddd':1}
+
+
+    def get_box(self, tmpdir):
+        return Box(
+            'test-box',
+            base=tmpdir,
+            indexes=[Index(
+                DatePath(tmpdir).join('test-box'),
+                Parser()
+            )]
+        )
