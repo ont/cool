@@ -26,12 +26,15 @@
 # TODO: better naming / design for supporting different types of indexes?
 
 from path import DateSynced
-from index import FileIds, FileAgg
-from parsers import ParserWords
+
+from hash_agg import FileAgg
+from hash_idx import FileIds
 
 class Index:
-    def __init__(self, dpath):
+    def __init__(self, dpath, parser):
         self.dpath = dpath
+        self.parser = parser
+
         self.file_ids = FileIds(self.dpath.minute.suffix('.idx'))
         self.file_ids.on_change(self.flush_aggs)
         self.file_aggs = [
@@ -40,9 +43,6 @@ class Index:
             FileAgg(self.dpath.month.suffix('.idx')),
             FileAgg(self.dpath.year.suffix('.idx')),
         ]
-
-        ## TODO: DI('parser') here ?
-        self.parser = ParserWords()
 
 
     def save(self, data):
