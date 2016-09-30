@@ -9,9 +9,8 @@ class LiquidDataFile:
         """ dpath: DatePath path which needs to be tracked
         """
         self.dpath = dpath
-        self.file = None
         self.on_change_callb = lambda *x: x  ## nop callback by default
-        self.refresh_file()
+        self.start_file()
 
 
     def save(self, data):
@@ -23,6 +22,7 @@ class LiquidDataFile:
             self.refresh_file()
 
         self.process_data(data)
+        self.empty = False
 
 
     def on_change(self, callback=None):
@@ -33,33 +33,32 @@ class LiquidDataFile:
 
 
     def refresh_file(self):
-        self.close()
-
+        self.flush()
         self.dpath = self.dpath.fresh()
-        self.dpath.parent().makedirs()
 
+        self.start_file()
+
+
+    def start_file(self):
+        self.empty = True
         self.start_data()
 
         if self.dpath.exists():
             data = self.dpath.open('rb').read()
             self.load_data(data)
 
-        self.file = self.dpath.open('ab')  ## append mode: don't truncate file after opening
-        self.file.seek(0)                 ## moving to start position  TODO: is it pointless??
-
 
     def close(self):
-        if self.file:
-            self.flush()
-            self.file.close()
+        self.flush()
 
 
     def flush(self):
-        data = self.save_data()
-        self.file.truncate(0)
-        self.file.seek(0)
-        self.file.write(data)
-        self.file.flush()
+        if not self.empty:
+            self.dpath.parent().makedirs()
+
+            file = self.dpath.open('wb')
+            file.write(self.save_data())
+            file.close()
 
 
     # TODO: it is better than def switch_to_file(self, ofile, nfile)   (how to start the first file problem)

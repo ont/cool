@@ -77,18 +77,16 @@ class TestIndex:
 
 
     def test_time_moving(self, tmpdir):
-        with DateSynced(stamp=datetime.datetime(2001, 2, 3, 4, 5)):
+        with DateSynced(stamp=datetime.datetime(2001, 1, 2, 3, 4)):
             i = Index(DatePath(str(tmpdir)), Parser())
+
+        with DateSynced(stamp=datetime.datetime(2001, 2, 3, 4, 5)):
             i.save({
                 'test': 'me'
             })
 
         idxs = list(tmpdir.visit('*.idx'))
-        assert len(idxs) == 5, "five empty idx"
-
-        data = [idx.read('rb') for idx in idxs]
-        assert data == [b'', b'', b'', b'', b''], "all files are empty"
-
+        assert len(idxs) == 0, "no files"
 
         with DateSynced(stamp=datetime.datetime(2001, 2, 3, 4, 6)):
             i.save({
@@ -96,7 +94,7 @@ class TestIndex:
             })
 
         idxs = list(tmpdir.visit('*.idx'))
-        assert len(idxs) == 6, "five empty idx + new one"
+        assert len(idxs) == 5, "five idx"
 
         data = next(tmpdir.visit('*/2001.idx')).read('rb')
         assert msgpack.unpackb(data) == {b'test': 1, b'me': 1}
@@ -112,9 +110,6 @@ class TestIndex:
 
         data = next(tmpdir.visit('*/05.idx')).read('rb')
         assert msgpack.unpackb(data) == {b'test': [0], b'me': [0]}
-
-        data = next(tmpdir.visit('*/06.idx')).read('rb')
-        assert data == b'', "not yet flushed file"
 
         i.flush()
 
@@ -137,10 +132,8 @@ class TestIndex:
                 'test': 'other'
             })
 
-
         idxs = list(tmpdir.visit('*.idx'))
-        data = [idx.read('rb') for idx in idxs]
-        assert data == [b'', b'', b'', b'', b''], "all files are empty"
+        assert len(idxs) == 0, "no idx files without flushing"
 
 
     def test_crash_after_time_movement(self, tmpdir):
@@ -176,8 +169,8 @@ class TestIndex:
         data = next(tmpdir.visit('*/05.idx')).read('rb')
         assert msgpack.unpackb(data) == {b'test': [0], b'me': [0]}
 
-        data = next(tmpdir.visit('*/06.idx')).read('rb')
-        assert data == b'', "not yet flushed file"
+        idxs = list(tmpdir.visit('*/06.idx'))
+        assert len(idxs) == 0, "not yet flushed file"
 
         i2.flush()
 
