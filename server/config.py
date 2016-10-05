@@ -2,7 +2,7 @@ import yaml
 import importlib
 
 from .box import Box
-from .path import DatePath
+from common.path import DatePath
 
 class Config:
     """Class for creating boxes from YAML config file."""

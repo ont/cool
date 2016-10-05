@@ -2,7 +2,7 @@ import os
 import datetime
 import common.tubes
 from server.files import PakFile, SavFile
-from server.path import DatePath, DateSynced
+from common.path import DatePath, DateSynced
 
 class Box:
     def __init__(self, name, base = './boxes', indexes = None):

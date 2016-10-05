@@ -1,6 +1,6 @@
 import msgpack
 import datetime
-from server.path import DatePath, DateSynced
+from common.path import DatePath, DateSynced
 from server.indexes.hash import Index
 from server.parsers.words import Parser
 

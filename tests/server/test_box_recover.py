@@ -3,7 +3,7 @@ import datetime
 from tools import TestTools
 
 from server.box import Box
-from server.path import DateSynced, DatePath
+from common.path import DateSynced, DatePath
 from server.recover import Recover
 from server.indexes.hash import Index
 from server.parsers.words import Parser

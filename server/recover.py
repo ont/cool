@@ -3,7 +3,7 @@ import msgpack
 import datetime
 import itertools
 from .box import Box
-from .path import DatePath, DateSynced
+from common.path import DatePath, DateSynced
 from common.tubes import MsgunpackTube
 
 ##

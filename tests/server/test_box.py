@@ -5,7 +5,7 @@ import msgpack
 import datetime
 from tools import TestTools
 from server.box import Box
-from server.path import DateSynced
+from common.path import DateSynced
 
 class TestBox(TestTools):
     date1 = datetime.datetime(2001, 2, 3, 4, 5)
