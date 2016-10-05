@@ -1,8 +1,8 @@
 import msgpack
 import datetime
-from path import DatePath, DateSynced
-from indexes.hash import Index
-from parsers.words import Parser
+from server.path import DatePath, DateSynced
+from server.indexes.hash import Index
+from server.parsers.words import Parser
 
 class TestIndex:
     def test_simple(self, tmpdir):

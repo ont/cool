@@ -1,4 +1,4 @@
-from parsers.words import Parser
+from server.parsers.words import Parser
 
 class TestParser:
     def test_dict(self):

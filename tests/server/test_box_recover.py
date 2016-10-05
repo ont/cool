@@ -1,11 +1,12 @@
 import os
 import datetime
-from box import Box
-from path import DateSynced, DatePath
 from tools import TestTools
-from recover import Recover
-from indexes.hash import Index
-from parsers.words import Parser
+
+from server.box import Box
+from server.path import DateSynced, DatePath
+from server.recover import Recover
+from server.indexes.hash import Index
+from server.parsers.words import Parser
 
 class TestBox(TestTools):
     date1 = datetime.datetime(2001, 2, 3, 4, 5)

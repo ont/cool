@@ -1,5 +1,5 @@
 import os
-import common.tubes
+import common.tubes as tubes
 from .liquid_stream import LiquidStreamFile
 
 class SavFile(LiquidStreamFile):

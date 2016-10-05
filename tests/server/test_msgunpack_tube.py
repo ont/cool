@@ -1,5 +1,5 @@
-import tubes
 import msgpack
+import common.tubes as tubes
 
 class TestMsgpackTube:
     def test_correct_output(self):

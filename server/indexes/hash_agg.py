@@ -1,4 +1,4 @@
-import common.tubes
+import common.tubes as tubes
 from server.files import LiquidDataFile
 
 class FileAgg(LiquidDataFile):

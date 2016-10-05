@@ -1,5 +1,5 @@
 import datetime
-from path import DateSynced
+from server.path import DateSynced
 
 class TestTree:
     def test_sync(self):

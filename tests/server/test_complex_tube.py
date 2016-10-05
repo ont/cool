@@ -1,4 +1,4 @@
-import tubes
+import common.tubes as tubes
 
 class TestComplexTube:
     def test_complex_1(self):
