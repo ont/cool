@@ -1,8 +1,8 @@
 import os
-import tubes
 import datetime
-from files import PakFile, SavFile
-from path import DatePath, DateSynced
+import server.tubes
+from server.files import PakFile, SavFile
+from server.path import DatePath, DateSynced
 
 class Box:
     def __init__(self, name, base = './boxes', indexes = None):

@@ -1,9 +1,0 @@
-venv
-__pycache__
-\.cache
-.*\.orig$
-logs
-.*\.swp$
-paks/
-.*\.pyc$
-.coverage$

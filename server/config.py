@@ -1,8 +1,8 @@
 import yaml
 import importlib
 
-from box import Box
-from path import DatePath
+from .box import Box
+from .path import DatePath
 
 class Config:
     """Class for creating boxes from YAML config file."""
@@ -56,8 +56,8 @@ class Config:
 
         res = []
         for iconf in box_config['indexes']:
-            pmod = importlib.import_module('parsers.' + iconf['parser'])
-            imod = importlib.import_module('indexes.' + iconf['type'])
+            pmod = importlib.import_module('server.parsers.' + iconf['parser'])
+            imod = importlib.import_module('server.indexes.' + iconf['type'])
 
             index = imod.Index(
                 DatePath(self.storage).join(box_name),

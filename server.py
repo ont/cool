@@ -3,13 +3,13 @@
 import os
 import glob
 import click
-import tubes
 import signal
 import asyncio
+import server.tubes
 
-from box import Box
-from config import Config
-from recover import Recover
+from server.box import Box
+from server.config import Config
+from server.recover import Recover
 
 class Server:
     def __init__(self, host='127.0.0.1', port=26100, config=None):

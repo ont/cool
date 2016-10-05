@@ -1,5 +1,5 @@
 import os
-import tubes
+import server.tubes
 from .liquid_stream import LiquidStreamFile
 
 class PakFile(LiquidStreamFile):

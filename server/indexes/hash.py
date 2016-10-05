@@ -25,7 +25,7 @@
 
 # TODO: better naming / design for supporting different types of indexes?
 
-from path import DateSynced
+from server.path import DateSynced
 
 from .hash_agg import FileAgg
 from .hash_ids import FileIds
