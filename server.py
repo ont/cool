@@ -5,7 +5,7 @@ import glob
 import click
 import signal
 import asyncio
-import server.tubes
+import common.tubes
 
 from server.box import Box
 from server.config import Config

@@ -1,4 +1,4 @@
-import server.tubes
+import common.tubes
 from server.files import LiquidDataFile
 
 class FileIds(LiquidDataFile):

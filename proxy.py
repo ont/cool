@@ -2,7 +2,7 @@ import click
 import asyncio
 
 from proxy.pipe import ProxyPipe
-from proxy.sender import ProxySender
+from proxy.dumper import ProxyDumper
 
 
 class Proxy:
@@ -27,7 +27,7 @@ class Proxy:
         dreader, dwriter = await asyncio.open_connection(self.target, self.port)
         print('connected')
 
-        pipe = ProxyPipe(breader, bwriter, dreader, dwriter, self.sender)
+        pipe = ProxyPipe(breader, bwriter, dreader, dwriter, self.dumper)
         pipe.start()
 
 
