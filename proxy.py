@@ -37,11 +37,14 @@ class Proxy:
 
 
 @click.command()
+@click.option('--config', default='/etc/cool/config.yml', help='Path to config file (default: /etc/cool/config.yml).')
 @click.argument('target')  # TARGET: all requests will be proxied to this IP address
-def main(target):
+def main(config, target):
     ## TODO: move host and port (sender's options) to lazy container configuration
-    s = ProxySender('localhost', 26100)
-    p = Proxy(target, sender=s)
+    p = Proxy(
+        target,
+        dumper = Dumper( Config(config) )
+    )
     p.start()
 
 

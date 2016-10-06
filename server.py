@@ -8,21 +8,26 @@ import asyncio
 import common.tubes
 
 from server.box import Box
-from server.config import Config
+from server.loader import Loader
 from server.recover import Recover
+from common.config import Config
 
 class Server:
-    def __init__(self, host='127.0.0.1', port=26100, config=None):
+    def __init__(self, host='127.0.0.1', port=26100, config=None, loader=None):
         """
         :host: host to listen on
         :port: port to listen on
-        :config: configurator object (probably it is instance of "Config" class)
+        :config: instance of Config class (parsed confing)
+        :loader: loader object for loading boxes/indexes from config)
+
         """
         self.loop = asyncio.get_event_loop()
         coro = asyncio.start_server(self.handle_connection, host=host, port=port)
         asyncio.ensure_future(coro)
 
+        ## TODO: replace this with DI?
         self.config = config
+        self.loader = loader
 
         self.boxes = {}
         self.recover_boxes()
@@ -66,11 +71,11 @@ class Server:
                 name = bytes(os.path.basename(file), 'utf8')
 
                 ## do recover of single box after possible crash
-                Recover().recover( self.config.load_box(name) )
+                Recover().recover( self.loader.load_box(name) )
 
 
     def load_boxes(self):
-        boxes = self.config.load_boxes()
+        boxes = self.loader.load_boxes()
         print('loaded boxes:', boxes)
         for box in boxes:
             name = bytes(box.name, 'utf8')
@@ -103,11 +108,16 @@ class Server:
 @click.command()
 @click.option('--host', default='127.0.0.1', help='Host to listen on (default: 127.0.0.1).')
 @click.option('--port', default=26100, help='Port to listen on (default: 26100).')
-@click.option('--config', default='./etc/cool/config.yml', help='Path to config file (default: /etc/cool/config.yml).')
+@click.option('--config', default='/etc/cool/config.yml', help='Path to config file (default: /etc/cool/config.yml).')
 def main(host, port, config):
     config = Config(config)
+    loader = Loader(config)
 
-    s = Server(host, port, config)
+    s = Server(
+        host, port,
+        config=config,
+        loader=loader
+    )
     s.start()
 
 

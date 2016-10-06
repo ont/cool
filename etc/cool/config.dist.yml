@@ -5,6 +5,7 @@
 ###
 options:
     storage: /data
+    queue: /queue
 
 boxes:
     request:

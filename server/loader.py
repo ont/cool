@@ -1,21 +1,17 @@
-import yaml
 import importlib
 
-from .box import Box
+from server.box import Box
 from common.path import DatePath
 
-class Config:
-    """Class for creating boxes from YAML config file."""
+class Loader(object):
+    """Class for loading boxes/indexes from config"""
 
     def __init__(self, config):
-        """Creates configurator.
-
-        :config: filename of YAML config
+        """
+        :config: instance of Config class for loading from (parsed yaml).
 
         """
-        self.config = yaml.load(open(config))
-        print(self.config)
-        self.storage = self.config['options']['storage']
+        self.config = config
 
 
     def load_boxes(self):
@@ -24,7 +20,7 @@ class Config:
         :returns: list of Box's.
 
         """
-        return [ self.load_box(name) for name in self.config['boxes'] ]
+        return [ self.load_box(name) for name in self.config.boxes ]
 
 
     def load_box(self, name):
@@ -35,12 +31,13 @@ class Config:
         :returns: Box
 
         """
-        config = self.config['boxes'].get(name, None)
+
+        config = self.config.boxes.get(name, None)
         if config:
             indexes = self.load_indexes( config, name )
-            return Box(name, self.storage, indexes)
+            return Box(name, self.config.storage, indexes)
 
-        return Box(name, self.storage)  ## return box without indexes
+        return Box(name, self.config.storage)  ## return box without indexes
 
 
     def load_indexes(self, box_config, box_name):
@@ -60,7 +57,7 @@ class Config:
             imod = importlib.import_module('server.indexes.' + iconf['type'])
 
             index = imod.Index(
-                DatePath(self.storage).join(box_name),
+                DatePath(self.config.storage).join(box_name),
                 pmod.Parser()
             )
             res.append(index)
