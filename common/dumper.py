@@ -6,11 +6,10 @@ class Dumper:
     """Class for storing data packets in special queue dir.
     """
 
-    def __init__(self, path, config):
+    def __init__(self, config):
         """
-        :path: path to queue dir.
+        :config: instance of Config class.
         """
-        self.path = path
         self.config = config
 
 
@@ -21,10 +20,13 @@ class Dumper:
 
         """
         tube = MsgpackTube() | ZipTube()
-        ftmp = os.path.join(config.queue, 'tmp_' uuid.uuid4())
-        fend = os.path.join(config.queue, 'dat_' uuid.uuid4())
-        with open(ftmp, 'wb') as fdump:
+        uid = str(uuid.uuid4())
+
+        ftmp = os.path.join(self.config.queue, 'tmp_' + uid)
+        fend = os.path.join(self.config.queue, 'dat_' + uid)
+
+        with open(ftmp, 'wb') as fobj:
             for chunk in tube(data, flush=True):
-                ftmp.write(chunk)
+                fobj.write(chunk)
 
         os.rename(ftmp, fend)
