@@ -122,4 +122,4 @@ def main(host, port, config):
 
 
 if __name__ == '__main__':
-    main()
+    main(auto_envvar_prefix='COOL')  ## auto-import of env vars COOL_*

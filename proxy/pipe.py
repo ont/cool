@@ -4,13 +4,13 @@ from .sender import ProxySender
 
 ## TODO: rename to ProxySniffer (main objective of this class is sitting in the middle and parsing http-flow)
 class ProxyPipe:
-    def __init__(self, breader, bwriter, dreader, dwriter, sender=None):
+    def __init__(self, breader, bwriter, dreader, dwriter, dumper=None):
         self.loop = asyncio.get_event_loop()
         self.breader = breader
         self.bwriter = bwriter
         self.dreader = dreader
         self.dwriter = dwriter
-        self.sender = sender
+        self.dumper = dumper
 
         self.parser = ProxyParser() ## TODO: change to DI containers
 
@@ -60,5 +60,5 @@ class ProxyPipe:
         while True:
             pair = await self.parser.get_pair()
 
-            self.sender.send('some-uuid-here', 'request',  pair['request'])
-            self.sender.send('some-uuid-here', 'response', pair['response'])
+            self.dumper.save('request',  pair['request'])
+            self.dumper.save('response', pair['response'])
