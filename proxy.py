@@ -9,7 +9,7 @@ from common.dumper import Dumper
 
 
 class Proxy:
-    def __init__(self, target, bind, dumper=None, headers={}):
+    def __init__(self, target, bind, dumper=None):
         self.dumper = dumper  ## TODO: change this to DI containers
 
         self.thost, self.tport = target
@@ -26,7 +26,7 @@ class Proxy:
         dreader, dwriter = await asyncio.open_connection(self.thost, self.tport)
         print('connected')
 
-        pipe = ProxyPipe(breader, bwriter, dreader, dwriter, self.dumper)
+        pipe = ProxyPipe(breader, bwriter, dreader, dwriter, dumper=self.dumper)
         pipe.start()
 
 
@@ -47,18 +47,11 @@ def parse_host_port(ctx, param, value):
 @click.option('--config', default='/etc/cool/config.yml', help='Path to config file (default: /etc/cool/config.yml).')
 @click.option('--target', required=True, callback=parse_host_port, help='Target pair IP:PORT to proxy to. All requests will be proxied to this port.')
 @click.option('--bind', default='0.0.0.0:8080', callback=parse_host_port, help='Proxy will listen on this IP:PORT')
-@click.option('--host', help='Name of site to proxy to. If present then "Host" header of all requests will be set to this value.')
-def main(config, target, bind, host):
-    ## TODO: move host and port (sender's options) to lazy container configuration
-    headers = {}
-    if host:
-        headers['Host'] = host
-
+def main(config, target, bind):
     p = Proxy(
         target,
         bind,
         dumper = Dumper( Config(config) ),
-        headers = headers
     )
     p.start()
 

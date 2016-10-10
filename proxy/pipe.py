@@ -1,6 +1,6 @@
 import asyncio
-from .parser import ProxyParser
-from .sender import ProxySender
+from proxy.parser import ProxyParser
+from proxy.mutator import Mutator
 
 ## TODO: rename to ProxySniffer (main objective of this class is sitting in the middle and parsing http-flow)
 class ProxyPipe:
@@ -10,11 +10,14 @@ class ProxyPipe:
         self.bwriter = bwriter
         self.dreader = dreader
         self.dwriter = dwriter
-        self.dumper = dumper
 
-        self.parser = ProxyParser() ## TODO: change to DI containers
+        ## TODO: rewrite this hell with DI
+        self.dumper  = dumper           ## TODO: .. already configured object
+        self.parser  = ProxyParser()    ## TODO: .. no configuration, just create
+
 
     def start(self):
+        ## TODO: test async <--> ensure_future replacement
         asyncio.async(self.start_loops())
 
 
@@ -33,7 +36,6 @@ class ProxyPipe:
                 break
 
             self.parser.from_browser(chunk)
-            #chunk = self.parse_chunk(chunk)
             self.dwriter.write(chunk)
 
 
@@ -60,5 +62,9 @@ class ProxyPipe:
         while True:
             pair = await self.parser.get_pair()
 
-            self.dumper.save('request',  pair['request'])
-            self.dumper.save('response', pair['response'])
+            if not pair:
+                print('-- closing pipe')
+                break
+
+            #self.dumper.save('request',  pair['request'])
+            #self.dumper.save('response', pair['response'])

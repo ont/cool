@@ -13,8 +13,6 @@ except ImportError:
 class ProxyParser:
     ## TODO: replace sender argument with DI container
     def __init__(self):
-        """ ip: ip address of client connected to proxy
-        """
         self.reset()
 
 
@@ -24,6 +22,7 @@ class ProxyParser:
         self.s2p = HttpParser()  ## server to proxy parser
         self.b2p_raw = b''       ## raw request
         self.s2p_raw = b''       ## raw response
+
 
         self.future = asyncio.Future()
 
@@ -41,6 +40,7 @@ class ProxyParser:
         self.b2p_raw += chunk
 
 
+
     ## TODO: try: except:  with conversation logging (and self.reset()?)
     ## TODO: websockets/other-over-http case
     def from_server(self, chunk):
@@ -49,6 +49,7 @@ class ProxyParser:
 
         if self.s2p.is_message_complete():
             self.resolve()
+
 
     ## TODO: for browsers crashes (incomplete requests)
     def browser_stops(self):
@@ -59,7 +60,11 @@ class ProxyParser:
         ## TODO: self.send() here...
         print('-- server stops --')
 
+
     def resolve(self):
+        """Internal method of parser for resolving future returned
+           from Parser.get_pair() method.
+        """
         dt = int((time.time() - self.ts) * 1000)
         print('{}ms'.format(dt), self.b2p.get_method(), self.b2p.get_url(), '  {} bytes'.format(len(self.s2p_raw)))
         self.future.set_result({
