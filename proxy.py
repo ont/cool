@@ -27,7 +27,7 @@ class Proxy:
         print('connected')
 
         pipe = ProxyPipe(breader, bwriter, dreader, dwriter, dumper=self.dumper)
-        pipe.start()
+        await pipe.start()
 
 
     def start(self):

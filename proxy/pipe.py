@@ -1,6 +1,5 @@
 import asyncio
 from proxy.parser import ProxyParser
-from proxy.mutator import Mutator
 
 ## TODO: rename to ProxySniffer (main objective of this class is sitting in the middle and parsing http-flow)
 class ProxyPipe:
@@ -16,15 +15,18 @@ class ProxyPipe:
         self.parser  = ProxyParser()    ## TODO: .. no configuration, just create
 
 
-    def start(self):
-        ## TODO: test async <--> ensure_future replacement
-        asyncio.async(self.start_loops())
+    async def start(self):
+        await_coro = self.await_pair()  ## create coro (lazy call to await_pair with no args)
+        await_task = asyncio.ensure_future(await_coro) ## shedule async execution of coro object (in future)
 
+        ## await for special coro "wait" for completing of two tasks
+        await asyncio.wait([
+            self.server_to_browser(),
+            self.browser_to_server()
+        ])
 
-    async def start_loops(self):
-        asyncio.ensure_future(self.server_to_browser())  ## asyncio.async(..)
-        asyncio.ensure_future(self.browser_to_server())  ## asyncio.async(..)
-        asyncio.ensure_future(self.await_pair())         ## asyncio.async(..)
+        print('-- canceling task --')
+        await_task.cancel()  ## stops task and its coro
 
 
     async def browser_to_server(self):
@@ -33,6 +35,7 @@ class ProxyPipe:
             chunk = await self.breader.read(1000)
             if not chunk:
                 self.parser.browser_stops()
+                self.dwriter.close()
                 break
 
             self.parser.from_browser(chunk)
@@ -48,8 +51,8 @@ class ProxyPipe:
         while True:
             chunk = await self.dreader.read(1000)
             if not chunk:
-                ## TODO: self.parser.server_stops() --> calls ProxyParser.send(...)
                 self.parser.server_stops()
+                self.bwriter.close()
                 break
 
             self.parser.from_server(chunk)
@@ -61,10 +64,5 @@ class ProxyPipe:
         """
         while True:
             pair = await self.parser.get_pair()
-
-            if not pair:
-                print('-- closing pipe')
-                break
-
             #self.dumper.save('request',  pair['request'])
             #self.dumper.save('response', pair['response'])

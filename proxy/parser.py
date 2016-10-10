@@ -17,11 +17,11 @@ class ProxyParser:
 
 
     def reset(self):
-        self.ts = None           ## timestamp of request
-        self.b2p = HttpParser()  ## browser to proxy parser
-        self.s2p = HttpParser()  ## server to proxy parser
-        self.b2p_raw = b''       ## raw request
-        self.s2p_raw = b''       ## raw response
+        self.ts = None            ## timestamp of request
+        self.b2p = HttpParser()   ## browser to proxy parser
+        self.s2p = HttpParser()   ## server to proxy parser
+        self.b2p_raw = b''        ## raw request
+        self.s2p_raw = b''        ## raw response
 
 
         self.future = asyncio.Future()
@@ -54,6 +54,7 @@ class ProxyParser:
     ## TODO: for browsers crashes (incomplete requests)
     def browser_stops(self):
         print('-- browser stops --')
+
 
     ## TODO: for server crashes (incomplete responses)
     def server_stops(self):
