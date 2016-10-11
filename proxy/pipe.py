@@ -3,7 +3,7 @@ from proxy.parser import ProxyParser
 
 ## TODO: rename to ProxySniffer (main objective of this class is sitting in the middle and parsing http-flow)
 class ProxyPipe:
-    def __init__(self, breader, bwriter, dreader, dwriter, dumper=None):
+    def __init__(self, breader, bwriter, dreader, dwriter, headers = {}, dumper=None):
         self.loop = asyncio.get_event_loop()
         self.breader = breader
         self.bwriter = bwriter
@@ -11,8 +11,8 @@ class ProxyPipe:
         self.dwriter = dwriter
 
         ## TODO: rewrite this hell with DI
-        self.dumper  = dumper           ## TODO: .. already configured object
-        self.parser  = ProxyParser()    ## TODO: .. no configuration, just create
+        self.dumper  = dumper               ## TODO: .. already configured object
+        self.parser  = ProxyParser(headers) ## TODO: .. configuration in place
 
 
     async def start(self):
@@ -20,7 +20,7 @@ class ProxyPipe:
         await_task = asyncio.ensure_future(await_coro) ## shedule async execution of coro object (in future)
 
         ## await for special coro "wait" for completing of two tasks
-        await asyncio.wait([
+        await asyncio.gather(*[
             self.server_to_browser(),
             self.browser_to_server()
         ])
@@ -38,8 +38,8 @@ class ProxyPipe:
                 self.dwriter.close()
                 break
 
-            self.parser.from_browser(chunk)
-            self.dwriter.write(chunk)
+            for chunk in self.parser.from_browser(chunk):
+                self.dwriter.write(chunk)
 
 
     #def parse_chunk(self, chunk):
@@ -55,8 +55,8 @@ class ProxyPipe:
                 self.bwriter.close()
                 break
 
-            self.parser.from_server(chunk)
-            self.bwriter.write(chunk)
+            for chunk in self.parser.from_server(chunk):
+                self.bwriter.write(chunk)
 
 
     async def await_pair(self):

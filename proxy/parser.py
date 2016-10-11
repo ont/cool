@@ -2,6 +2,7 @@ import time
 import gzip
 import asyncio
 from io import BytesIO
+from proxy.mutator import Mutator
 
 try:
     from http_parser.parser import HttpParser
@@ -11,8 +12,8 @@ except ImportError:
 
 
 class ProxyParser:
-    ## TODO: replace sender argument with DI container
-    def __init__(self):
+    def __init__(self, headers):
+        self.mutator = Mutator(headers)
         self.reset()
 
 
@@ -23,32 +24,53 @@ class ProxyParser:
         self.b2p_raw = b''        ## raw request
         self.s2p_raw = b''        ## raw response
 
+        self.b2p_state = 'head'  ## what part of request to mutate+send next
 
         self.future = asyncio.Future()
 
-        ## NOTE: wrong (see below)
-        #self.data = {}           ## data to send through sender
 
-
-    ## TODO: try: except:  with conversation logging (and self.reset()?)
     ## TODO: websockets/other-over-http case
     def from_browser(self, chunk):
         if not self.ts:
             self.ts = time.time()
 
+        ## TODO: test parsed length, if error (parsed != len(chunk)) then close connection
         self.b2p.execute(chunk, len(chunk))
         self.b2p_raw += chunk
+
+        ## TODO: move mutate-call/reassemble logic to external class?
+        if self.b2p.is_headers_complete() and self.b2p_state == 'head':
+            first_line = ' '.join([
+                self.b2p.get_method(),
+                self.b2p.get_url(),
+                'HTTP/{}.{}'.format(*self.b2p.get_version())
+            ])
+            headers = self.mutator.mutate(self.b2p.get_headers())
+            headers = '\r\n'.join(['{}: {}'.format(name, value) for name, value in headers.items()])
+
+            self.b2p_state = 'body'
+            #yield first_line + headers
+            yield bytes(first_line + '\r\n' + headers + '\r\n\r\n', 'utf8')
+
+        elif self.b2p.is_headers_complete() and self.b2p_state == 'body':
+            chunk = self.b2p.recv_body()
+            if chunk:
+                yield chunk
 
 
 
     ## TODO: try: except:  with conversation logging (and self.reset()?)
     ## TODO: websockets/other-over-http case
     def from_server(self, chunk):
+        ## TODO: test parsed length, if error (parsed != len(chunk)) then close connection
         self.s2p.execute(chunk, len(chunk))
         self.s2p_raw += chunk
 
+        yield chunk
+
         if self.s2p.is_message_complete():
             self.resolve()
+
 
 
     ## TODO: for browsers crashes (incomplete requests)
@@ -75,62 +97,9 @@ class ProxyParser:
         })
         self.reset()
 
+
     def get_pair(self):
         """ Use "await" from this method for recieving final request-response pair.
             Returns: future object which will be resolved in future
         """
         return self.future
-
-    ###
-    # COMPLETELY WRONG: we need __simpliest__ proxy for just detecting request-response pairs of raw http
-    # NOTE: check only s2p.is_message_complete()
-    ###
-    #def send(self):
-    #    ## TODO: if sended: return ... (after successfull send clear b2p_raw and s2p_raw)
-    #    ## TODO: make this method async
-
-    #    for action in ('req_method', 'req_path', 'req_query', 'req_headers', 'req_body',
-    #                   'res_code', 'res_headers', 'res_body'):
-    #        action = getattr(self, 'add_' + action)
-    #        action()
-
-    #    print(self.data)
-    #    self.reset()
-
-
-    #def add_req_method(self):
-    #    """ TODO: think about decomposing of each action_* into separate class
-    #        Adds method (GET or POST) to result data for logging.
-    #    """
-    #    self.data['req_method'] = self.b2p.get_method()
-
-    #def add_req_url(self):
-    #    self.data['req_url'] = self.b2p.get_url()
-
-    #def add_req_path(self):
-    #    self.data['req_path'] = self.b2p.get_path()
-
-    #def add_req_query(self):
-    #    self.data['req_query'] = self.b2p.get_query_string()
-
-    #def add_req_headers(self):
-    #    self.data['req_headers'] = self.b2p.get_headers()
-
-    #def add_req_body(self):
-    #    self.data['req_body'] = self.b2p.recv_body()
-
-    #def add_res_code(self):
-    #    self.data['res_code'] = self.s2p.get_status_code()
-
-    #def add_res_headers(self):
-    #    self.data['res_headers'] = self.s2p.get_headers()
-
-    #def add_res_body(self):
-    #    hs = self.s2p.get_headers()
-    #    body = self.s2p.recv_body()
-
-    #    if hs.get('Content-Encoding', None) == 'gzip':
-    #        sio = BytesIO(body)
-    #        body = gzip.GzipFile(fileobj=sio).read()
-
-    #    self.data['res_body'] = body
