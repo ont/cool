@@ -23,9 +23,9 @@ class Mutator(object):
                 headers[name] = self.headers[lname]
                 used.append(lname)
 
-        for lname in self.headers:
+        for lname, value in self.headers.items():
             if lname not in used:
-                headers[self.ucfirst(lname)]
+                headers[self.ucfirst(lname)] = value
 
         return headers
 

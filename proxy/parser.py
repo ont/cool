@@ -49,7 +49,7 @@ class ProxyParser:
             headers = '\r\n'.join(['{}: {}'.format(name, value) for name, value in headers.items()])
 
             self.b2p_state = 'body'
-            #yield first_line + headers
+            print(first_line + '\r\n' + headers + '\r\n\r\n')
             yield bytes(first_line + '\r\n' + headers + '\r\n\r\n', 'utf8')
 
         elif self.b2p.is_headers_complete() and self.b2p_state == 'body':

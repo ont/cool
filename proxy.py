@@ -9,9 +9,10 @@ from common.dumper import Dumper
 
 
 class Proxy:
-    def __init__(self, target, bind, dumper=None, headers={}):
+    def __init__(self, target, bind, dumper=None, headers={}, real_ip=False):
         self.dumper = dumper  ## TODO: change this to DI containers
         self.headers = headers
+        self.real_ip = real_ip
 
         self.thost, self.tport = target
         self.lhost, self.lport = bind
@@ -26,6 +27,11 @@ class Proxy:
         print('connecting')
         dreader, dwriter = await asyncio.open_connection(self.thost, self.tport)
         print('connected')
+
+        if self.real_ip:
+            client_ip, client_port = bwriter.get_extra_info('peername')
+            self.headers['x-forwarded-for'] = client_ip
+            self.headers['x-real-ip'] = client_ip
 
         pipe = ProxyPipe(breader, bwriter, dreader, dwriter, headers=self.headers, dumper=self.dumper)
         await pipe.start()
@@ -49,7 +55,8 @@ def parse_host_port(ctx, param, value):
 @click.option('--target', required=True, callback=parse_host_port, help='Target pair IP:PORT to proxy to. All requests will be proxied to this port.')
 @click.option('--bind', default='0.0.0.0:8080', callback=parse_host_port, help='Proxy will listen on this IP:PORT')
 @click.option('--host', help='Name of site to proxy to. If present then "Host" header of all requests will be set to this value.')
-def main(config, target, bind, host):
+@click.option('--real-ip', is_flag=True, help='If present then "X-Forwarded-For" and "X-Real-IP" headers will be set with client ip address.')
+def main(config, target, bind, real_ip, host):
     ## TODO: move host and port (sender's options) to lazy container configuration
     headers = {}
     if host:
@@ -59,7 +66,8 @@ def main(config, target, bind, host):
         target,
         bind,
         dumper = Dumper( Config(config) ),
-        headers = headers
+        headers = headers,
+        real_ip = real_ip
     )
     p.start()
 
