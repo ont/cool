@@ -13,7 +13,7 @@ class TestDumper:
     def test_simple_dump(self, tmpdir):
         fk = FakeConfig(str(tmpdir))
         d = Dumper(fk)
-        d.save([1,2,3,4])
+        d.save('test-box', [1,2,3,4])
 
         dats = list(tmpdir.visit('dat_*'))
         tmps = list(tmpdir.visit('tmp_*'))
@@ -24,10 +24,10 @@ class TestDumper:
     def test_dump_content(self, tmpdir):
         fk = FakeConfig(str(tmpdir))
         d = Dumper(fk)
-        d.save([1,2,3,4])
+        d.save('test-box', [1,2,3,4])
 
         f = next(tmpdir.visit('dat_*'))
         data = f.read('rb')
         data = msgpack.unpackb(zlib.decompress(data))
-        assert data == [1,2,3,4]
-
+        assert data[b'box'] == b'test-box'
+        assert data[b'data'] == [1,2,3,4]

@@ -25,7 +25,7 @@ class ProxyPipe:
             self.browser_to_server()
         ])
 
-        print('-- canceling task --')
+        print('-- cancelling task --')
         await_task.cancel()  ## stops task and its coro
 
 
@@ -64,5 +64,7 @@ class ProxyPipe:
         """
         while True:
             pair = await self.parser.get_pair()
-            #self.dumper.save('request',  pair['request'])
-            #self.dumper.save('response', pair['response'])
+
+            with self.dumper:
+                self.dumper.save('request',  pair['request'])
+                self.dumper.save('response', pair['response'])
